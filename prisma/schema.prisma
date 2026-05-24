@@ -7,6 +7,29 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  user
+  admin
+  dev
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum VerificationType {
+  email_verification
+  password_reset
+}
+
+enum ApplicationStatus {
+  pending
+  reviewed
+  accepted
+  rejected
+}
+
 model Sample {
   id        Int       @id @default(autoincrement())
   name      String
@@ -15,4 +38,140 @@ model Sample {
   updatedAt DateTime  @updatedAt
 
   @@map("samples")
+}
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  role          Role     @default(user)
+  isVerified    Boolean  @default(false) @map("is_verified")
+  provider      String?  // null = local, otherwise 'google', 'github', etc.
+  companyId    String?  @unique @map("company_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  profile       UserProfile?
+  company       Company?       @relation(fields: [companyId], references: [id])
+  verifications Verification[]
+  savedJobs     SavedJob[]
+  applications  Application[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model UserProfile {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @unique @map("user_id") @db.Uuid
+  fullName   String    @map("full_name")
+  birthDate  DateTime? @map("birth_date") @db.Date
+  gender     Gender?
+  education  String?
+  address    String?
+  latitude   Decimal?  @db.Decimal(10, 7)
+  longitude  Decimal?  @db.Decimal(10, 7)
+  photoUrl   String?   @map("photo_url")
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Verification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  token     String           @unique
+  type      VerificationType
+  expiresAt DateTime         @map("expires_at")
+  used      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId, type])
+  @@map("verifications")
+}
+
+model Company {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String
+  email           String   @unique
+  phone           String?
+  descriptionRte  String?  @map("description_rte") @db.Text
+  logoUrl         String?  @map("logo_url")
+  city            String?
+  latitude        Decimal? @db.Decimal(10, 7)
+  longitude       Decimal? @db.Decimal(10, 7)
+
+  admin User?  @relation
+  jobs            Job[]
+
+  @@map("companies")
+}
+
+model JobCategory {
+  id    String @id @default(uuid()) @db.Uuid
+  name  String @unique
+
+  jobs  Job[]
+
+  @@map("job_categories")
+}
+
+model Job {
+  id           String    @id @default(uuid()) @db.Uuid
+  companyId    String    @map("company_id") @db.Uuid
+  categoryId   String    @map("category_id") @db.Uuid
+  title        String
+  description  String    @db.Text
+  bannerUrl    String?   @map("banner_url")
+  city         String?
+  salary       Decimal?  @db.Decimal(15, 2)
+  tags         Json?
+  deadline     DateTime?
+  isPublished  Boolean   @default(false) @map("is_published")
+  hasTest      Boolean   @default(false) @map("has_test")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category     JobCategory   @relation(fields: [categoryId], references: [id])
+  savedBy      SavedJob[]
+  applications Application[]
+
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([isPublished])
+  @@map("jobs")
+}
+
+model SavedJob {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  jobId     String   @map("job_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId]) 
+  @@map("saved_jobs")
+}
+
+model Application {
+  id              String            @id @default(uuid()) @db.Uuid
+  userId          String            @map("user_id") @db.Uuid
+  jobId           String            @map("job_id") @db.Uuid
+  cvUrl           String            @map("cv_url")
+  expectedSalary  Decimal?          @map("expected_salary") @db.Decimal(15, 2)
+  status          ApplicationStatus @default(pending)
+  rejectionReason String?           @map("rejection_reason") @db.Text
+  appliedAt       DateTime          @default(now()) @map("applied_at")
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job             Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId]) 
+  @@index([status])
+  @@map("applications")
 }
