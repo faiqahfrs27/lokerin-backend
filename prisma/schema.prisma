@@ -16,3 +16,15 @@ model Sample {
 
   @@map("samples")
 }
+
+model SubscriptionPlan {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  price     Int
+  features  String[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("subscription_plans")
+}
