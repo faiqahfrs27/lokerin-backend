@@ -12,9 +12,9 @@ import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
 import { SampleController } from "./modules/sample/sample.controller.js";
 import { SampleRouter } from "./modules/sample/sample.router.js";
 import { SampleService } from "./modules/sample/sample.service.js";
-import { SubscriptionPlanService } from "./modules/subscriptions-plan/subscription-plan.service.js";
-import { SubscriptionPlanController } from "./modules/subscriptions-plan/subscription-plan.controller.js";
-import { SubscriptionPlanRouter } from "./modules/subscriptions-plan/subscription-plan.router.js";
+import { SubscriptionPlanService } from "./modules/subscriptions/subscription-plan.service.js";
+import { SubscriptionPlanController } from "./modules/subscriptions/subscription-plan.controller.js";
+import { SubscriptionPlanRouter } from "./modules/subscriptions/subscription-plan.router.js";
 
 export class App {
   app: Express;
