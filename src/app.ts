@@ -1,7 +1,6 @@
 import cors from "cors";
 import express, { Express } from "express";
 import "reflect-metadata";
-import { PORT } from "./config/env.js";
 import { loggerHttp } from "./lib/logger-http.js";
 import { prisma } from "./lib/prisma.js";
 import {
@@ -9,17 +8,19 @@ import {
   notFoundMiddleware,
 } from "./middlewares/error.middleware.js";
 import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
+import { AuthRouter } from "./modules/auth/auth.router.js";
+import { LoginController } from "./modules/auth/login/login.controller.js";
+import { LoginService } from "./modules/auth/login/login.service.js";
+import { RegisterController } from "./modules/auth/register/register.controller.js";
+import { RegisterService } from "./modules/auth/register/register.service.js";
+import { ResendVerificationController } from "./modules/auth/resend-verification/resend-verification.controller.js";
+import { ResendVerificationService } from "./modules/auth/resend-verification/resend-verification.service.js";
+import { VerifyEmailController } from "./modules/auth/verify-email/verify-email.controller.js";
+import { VerifyEmailService } from "./modules/auth/verify-email/verify-email.service.js";
+import { MailService } from "./modules/mail/mail.service.js";
 import { SampleController } from "./modules/sample/sample.controller.js";
 import { SampleRouter } from "./modules/sample/sample.router.js";
 import { SampleService } from "./modules/sample/sample.service.js";
-import { RegisterService } from "./modules/auth/register/register.service.js";
-import { VerifyEmailService } from "./modules/auth/verify-email/verify-email.service.js";
-import { RegisterController } from "./modules/auth/register/register.controller.js";
-import { VerifyEmailController } from "./modules/auth/verify-email/verify-email.controller.js";
-import { AuthRouter } from "./modules/auth/auth.router.js";
-import { ResendVerificationService } from "./modules/auth/resend-verification/resend-verification.service.js";
-import { MailService } from "./modules/mail/mail.service.js";
-import { ResendVerificationController } from "./modules/auth/resend-verification/resend-verification.controller.js";
 
 export class App {
   app: Express;
@@ -49,6 +50,7 @@ export class App {
       prisma,
       mailService,
     );
+    const loginService = new LoginService(prisma);
 
     // controllers
     const sampleController = new SampleController(sampleService);
@@ -59,6 +61,7 @@ export class App {
     const resendVerificationController = new ResendVerificationController(
       resendVerificationService,
     );
+    const loginCotroller = new LoginController(loginService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -70,6 +73,7 @@ export class App {
       validationMiddleware,
       verifyEmailController,
       resendVerificationController,
+      loginCotroller,
     );
 
     // entry point
