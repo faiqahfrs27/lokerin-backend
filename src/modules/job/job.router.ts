@@ -39,5 +39,7 @@ export class JobRouter {
     this.router.delete("/:id", this.jobController.deleteJob);
   };
 
-  getRouter = () => this.router;
+  getRouter = () => {
+    return this.router;
+  };
 }

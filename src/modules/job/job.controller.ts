@@ -15,22 +15,19 @@ export class JobController {
     return companyId;
   };
 
-  createJob = async (req: Request<unknown, unknown, CreateJobDTO>, res: Response) => {
+  createJob = async (req: Request, res: Response) => {
     const companyId = this.getCompanyId(res);
     const result = await this.jobService.createJob(companyId, req.body);
     res.status(201).send(result);
   };
 
-  getJobById = async (req: Request<{ id: string }>, res: Response) => {
+  getJobById = async (req: Request, res: Response) => {
     const companyId = this.getCompanyId(res);
     const result = await this.jobService.getJobById(req.params.id, companyId);
     res.status(200).send(result);
   };
 
-  updateJob = async (
-    req: Request<{ id: string }, unknown, UpdateJobDTO>,
-    res: Response,
-  ) => {
+  updateJob = async (req: Request, res: Response) => {
     const companyId = this.getCompanyId(res);
     const result = await this.jobService.updateJob(
       req.params.id,
@@ -40,7 +37,7 @@ export class JobController {
     res.status(200).send(result);
   };
 
-  deleteJob = async (req: Request<{ id: string }>, res: Response) => {
+  deleteJob = async (req: Request, res: Response) => {
     const companyId = this.getCompanyId(res);
     const result = await this.jobService.deleteJob(req.params.id, companyId);
     res.status(200).send(result);
