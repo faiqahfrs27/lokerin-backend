@@ -13,20 +13,17 @@ export class JobRouter {
     private jobController: JobController,
     private validationMiddleware: ValidationMiddleware,
     private authMiddleware: AuthMiddleware,
-    private jwtSecret: string,
+
   ) {
     this.router = Router();
     this.initRoutes();
   }
 
   private initRoutes = () => {
-    // Semua endpoint butuh: login + email verified + role admin
-    this.router.use(this.authMiddleware.verifyToken(this.jwtSecret));
-    this.router.use(this.authMiddleware.verifyEmailVerified());
-    this.router.use(this.authMiddleware.verifyRole([Role.admin]));
-
     this.router.post(
       "/",
+      this.authMiddleware.verifyToken,
+      this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateBody(CreateJobDTO),
       this.jobController.createJob,
     );
@@ -42,7 +39,5 @@ export class JobRouter {
     this.router.delete("/:id", this.jobController.deleteJob);
   };
 
-  getRouter = () => {
-    return this.router;
-  };
+  getRouter = () => this.router;
 }

@@ -90,7 +90,6 @@ export class App {
       jobController,
       validationMiddleware,
       authMiddleware,
-      jwtSecret,
     );
 
     // entry point
