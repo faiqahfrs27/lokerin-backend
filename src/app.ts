@@ -8,6 +8,10 @@ import {
   notFoundMiddleware,
 } from "./middlewares/error.middleware.js";
 import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
+import { AuthMiddleware } from "./middlewares/auth.middleware.js";
+import { SampleController } from "./modules/sample/sample.controller.js";
+import { SampleRouter } from "./modules/sample/sample.router.js";
+import { SampleService } from "./modules/sample/sample.service.js";
 import { AuthRouter } from "./modules/auth/auth.router.js";
 import { LoginController } from "./modules/auth/login/login.controller.js";
 import { LoginService } from "./modules/auth/login/login.service.js";
@@ -18,9 +22,10 @@ import { ResendVerificationService } from "./modules/auth/resend-verification/re
 import { VerifyEmailController } from "./modules/auth/verify-email/verify-email.controller.js";
 import { VerifyEmailService } from "./modules/auth/verify-email/verify-email.service.js";
 import { MailService } from "./modules/mail/mail.service.js";
-import { SampleController } from "./modules/sample/sample.controller.js";
-import { SampleRouter } from "./modules/sample/sample.router.js";
-import { SampleService } from "./modules/sample/sample.service.js";
+import { ResendVerificationController } from "./modules/auth/resend-verification/resend-verification.controller.js";
+import { JobService } from "./modules/job/job.service.js";
+import { JobController } from "./modules/job/job.controller.js";
+import { JobRouter } from "./modules/job/job.router.js";
 
 export class App {
   app: Express;
@@ -52,6 +57,9 @@ export class App {
     );
     const loginService = new LoginService(prisma);
 
+    //jobService
+    const jobService = new JobService(prisma);
+
     // controllers
     const sampleController = new SampleController(sampleService);
 
@@ -63,8 +71,12 @@ export class App {
     );
     const loginCotroller = new LoginController(loginService);
 
+    //jobController
+    const jobController = new JobController(jobService);
+
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
+    const authMiddleware = new AuthMiddleware();
 
     // routes
     const router = new SampleRouter(sampleController, validationMiddleware);
@@ -75,10 +87,17 @@ export class App {
       resendVerificationController,
       loginCotroller,
     );
+    const jobRouter = new JobRouter(
+      jobController,
+      validationMiddleware,
+      authMiddleware,
+      jwtSecret,
+    );
 
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
+    this.app.use("/api/jobs", jobRouter.getRouter());
   }
 
   private errorMiddleware() {
