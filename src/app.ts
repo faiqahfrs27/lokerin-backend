@@ -9,6 +9,7 @@ import {
   notFoundMiddleware,
 } from "./middlewares/error.middleware.js";
 import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
+import { AuthMiddleware } from "./middlewares/auth.middleware.js";
 import { SampleController } from "./modules/sample/sample.controller.js";
 import { SampleRouter } from "./modules/sample/sample.router.js";
 import { SampleService } from "./modules/sample/sample.service.js";
@@ -20,6 +21,10 @@ import { AuthRouter } from "./modules/auth/auth.router.js";
 import { ResendVerificationService } from "./modules/auth/resend-verification/resend-verification.service.js";
 import { MailService } from "./modules/mail/mail.service.js";
 import { ResendVerificationController } from "./modules/auth/resend-verification/resend-verification.controller.js";
+// === JOB MODULE (cicilan 1 — Naila) ===
+import { JobService } from "./modules/job/job.service.js";
+import { JobController } from "./modules/job/job.controller.js";
+import { JobRouter } from "./modules/job/job.router.js";
 
 export class App {
   app: Express;
@@ -50,6 +55,9 @@ export class App {
       mailService,
     );
 
+    //jobService
+    const jobService = new JobService(prisma);
+
     // controllers
     const sampleController = new SampleController(sampleService);
 
@@ -60,8 +68,15 @@ export class App {
       resendVerificationService,
     );
 
+    //jobController
+    const jobController = new JobController(jobService);
+
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
+    const authMiddleware = new AuthMiddleware();
+
+    // JWT secret — dari env, naik ke env strict checker nanti kalo
+    const jwtSecret = process.env.JWT_SECRET || "dev-secret-change-me";
 
     // routes
     const router = new SampleRouter(sampleController, validationMiddleware);
@@ -71,10 +86,17 @@ export class App {
       verifyEmailController,
       resendVerificationController,
     );
+    const jobRouter = new JobRouter(
+      jobController,
+      validationMiddleware,
+      authMiddleware,
+      jwtSecret,
+    );
 
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
+    this.app.use("/api/jobs", jobRouter.getRouter());
   }
 
   private errorMiddleware() {
