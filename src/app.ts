@@ -12,6 +12,9 @@ import { AuthMiddleware } from "./middlewares/auth.middleware.js";
 import { SampleController } from "./modules/sample/sample.controller.js";
 import { SampleRouter } from "./modules/sample/sample.router.js";
 import { SampleService } from "./modules/sample/sample.service.js";
+import { SubscriptionPlanService } from "./modules/subscriptions/subscription-plan.service.js";
+import { SubscriptionPlanController } from "./modules/subscriptions/subscription-plan.controller.js";
+import { SubscriptionPlanRouter } from "./modules/subscriptions/subscription-plan.router.js";
 import { AuthRouter } from "./modules/auth/auth.router.js";
 import { LoginController } from "./modules/auth/login/login.controller.js";
 import { LoginService } from "./modules/auth/login/login.service.js";
@@ -22,7 +25,6 @@ import { ResendVerificationService } from "./modules/auth/resend-verification/re
 import { VerifyEmailController } from "./modules/auth/verify-email/verify-email.controller.js";
 import { VerifyEmailService } from "./modules/auth/verify-email/verify-email.service.js";
 import { MailService } from "./modules/mail/mail.service.js";
-import { ResendVerificationController } from "./modules/auth/resend-verification/resend-verification.controller.js";
 import { JobService } from "./modules/job/job.service.js";
 import { JobController } from "./modules/job/job.controller.js";
 import { JobRouter } from "./modules/job/job.router.js";
@@ -46,6 +48,7 @@ export class App {
   private registerModules() {
     // services
     const sampleService = new SampleService(prisma);
+    const subscriptionPlanService = new SubscriptionPlanService(prisma);
 
     //authService
     const mailService = new MailService();
@@ -62,6 +65,9 @@ export class App {
 
     // controllers
     const sampleController = new SampleController(sampleService);
+    const subscriptionPlanController = new SubscriptionPlanController(
+      subscriptionPlanService,
+    );
 
     //authController
     const registerController = new RegisterController(registerService);
@@ -80,6 +86,9 @@ export class App {
 
     // routes
     const router = new SampleRouter(sampleController, validationMiddleware);
+    const subscriptionPlanRouter = new SubscriptionPlanRouter(
+      subscriptionPlanController,
+      validationMiddleware,
     const authRouter = new AuthRouter(
       registerController,
       validationMiddleware,
@@ -95,6 +104,7 @@ export class App {
 
     // entry point
     this.app.use("/samples", router.getRouter());
+    this.app.use("/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
   }

@@ -4,10 +4,7 @@ import { PrismaClient } from "../../generated/prisma/client.js";
 
 const connectionString = `${process.env.DATABASE_URL}`;
 
-const adapter = new PrismaPg(
-  { connectionString },
-  { schema: "lokerin-backend" },
-);
+const adapter = new PrismaPg({ connectionString }, { schema: "lokerin-backend" });
 const prisma = new PrismaClient({ adapter });
 
 export { prisma };
