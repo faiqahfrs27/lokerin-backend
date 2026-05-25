@@ -1,18 +1,16 @@
 import { Request, Response } from "express";
 import { ApiError } from "../../utils/api-error.js";
 import { JobService } from "./job.service.js";
+import { CreateJobDTO } from "./dto/create-job.dto.js";
+import { UpdateJobDTO } from "./dto/update-job.dto.js";
 
 export class JobController {
   constructor(private jobService: JobService) {}
 
-  // Ambil companyId dari JWT payload (di-set sama auth middleware)
   private getCompanyId = (res: Response): string => {
     const companyId = res.locals.user?.companyId;
     if (!companyId) {
-      throw new ApiError(
-        "Your account is not linked to a company",
-        403,
-      );
+      throw new ApiError("Your account is not linked to a company", 403);
     }
     return companyId;
   };
