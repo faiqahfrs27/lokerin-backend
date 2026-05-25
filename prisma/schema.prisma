@@ -50,7 +50,8 @@ model SubscriptionPlan {
   updatedAt DateTime  @updatedAt
 
   @@map("subscription_plans")
-  
+}
+
 model User {
   id            String         @id @default(uuid()) @db.Uuid
   email         String         @unique

@@ -89,6 +89,8 @@ export class App {
     const subscriptionPlanRouter = new SubscriptionPlanRouter(
       subscriptionPlanController,
       validationMiddleware,
+    );
+
     const authRouter = new AuthRouter(
       registerController,
       validationMiddleware,
