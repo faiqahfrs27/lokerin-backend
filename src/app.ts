@@ -11,6 +11,8 @@ import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
 import { AuthRouter } from "./modules/auth/auth.router.js";
 import { LoginController } from "./modules/auth/login/login.controller.js";
 import { LoginService } from "./modules/auth/login/login.service.js";
+import { LogoutController } from "./modules/auth/logout/logout.controller.js";
+import { LogoutService } from "./modules/auth/logout/logout.service.js";
 import { RegisterController } from "./modules/auth/register/register.controller.js";
 import { RegisterService } from "./modules/auth/register/register.service.js";
 import { ResendVerificationController } from "./modules/auth/resend-verification/resend-verification.controller.js";
@@ -51,6 +53,7 @@ export class App {
       mailService,
     );
     const loginService = new LoginService(prisma);
+    const logoutService = new LogoutService(prisma);
 
     // controllers
     const sampleController = new SampleController(sampleService);
@@ -62,6 +65,7 @@ export class App {
       resendVerificationService,
     );
     const loginCotroller = new LoginController(loginService);
+    const logoutController = new LogoutController(logoutService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -74,6 +78,7 @@ export class App {
       verifyEmailController,
       resendVerificationController,
       loginCotroller,
+      logoutController,
     );
 
     // entry point
