@@ -19,8 +19,6 @@ export class SubscriptionPlanRouter {
     this.router.get("/", this.subscriptionPlanController.getPlans);
     this.router.get("/:id", this.subscriptionPlanController.getPlanById);
 
-    // TODO(tim): pasang authMiddleware + roleMiddleware("developer")
-    // sebelum validateBody, begitu sistem auth tim sudah ada.
     this.router.post(
       "/",
       this.validationMiddleware.validateBody(CreateSubscriptionPlanDTO),
