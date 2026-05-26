@@ -30,6 +30,7 @@ import { MailService } from "./modules/mail/mail.service.js";
 import { JobService } from "./modules/job/job.service.js";
 import { JobController } from "./modules/job/job.controller.js";
 import { JobRouter } from "./modules/job/job.router.js";
+import cookieParser from "cookie-parser";
 
 export class App {
   app: Express;
@@ -43,6 +44,7 @@ export class App {
     this.app.use(cors());
     this.app.use(loggerHttp);
     this.app.use(express.json());
+    this.app.use(cookieParser());
     this.registerModules();
     this.errorMiddleware();
   }
