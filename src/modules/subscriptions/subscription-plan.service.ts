@@ -13,7 +13,7 @@ export class SubscriptionPlanService {
     });
   };
 
-  getPlanById = async (id: number) => {
+  getPlanById = async (id: string) => {
     const plan = await this.prisma.subscriptionPlan.findFirst({
       where: { id, deletedAt: null },
     });
@@ -29,7 +29,7 @@ export class SubscriptionPlanService {
     return await this.prisma.subscriptionPlan.create({ data: body });
   };
 
-  updatePlan = async (id: number, body: UpdateSubscriptionPlanDTO) => {
+  updatePlan = async (id: string, body: UpdateSubscriptionPlanDTO) => {
     await this.getPlanById(id);
     return await this.prisma.subscriptionPlan.update({
       where: { id },
@@ -37,7 +37,7 @@ export class SubscriptionPlanService {
     });
   };
 
-  deletePlan = async (id: number) => {
+  deletePlan = async (id: string) => {
     await this.getPlanById(id);
     return await this.prisma.subscriptionPlan.update({
       where: { id },

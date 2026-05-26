@@ -41,7 +41,7 @@ model Sample {
 }
 
 model SubscriptionPlan {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @default(uuid()) @db.Uuid
   name      String    @unique
   price     Int
   features  String[]
@@ -95,7 +95,7 @@ model UserProfile {
 
 model RefreshToken {
   id        String   @id @default(uuid()) @db.Uuid
-   userId    String   @unique @map("user_id") @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
   token     String   @unique
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")

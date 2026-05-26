@@ -10,7 +10,7 @@ export class SubscriptionPlanController {
   };
 
   getPlanById = async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const result = await this.subscriptionPlanService.getPlanById(id);
     res.status(200).send(result);
   };
@@ -21,13 +21,13 @@ export class SubscriptionPlanController {
   };
 
   updatePlan = async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const result = await this.subscriptionPlanService.updatePlan(id, req.body);
     res.status(200).send(result);
   };
 
   deletePlan = async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     await this.subscriptionPlanService.deletePlan(id);
     res.status(200).send({ message: "Subscription plan deleted" });
   };
