@@ -30,7 +30,11 @@ export class LoginService {
       throw new ApiError("Invalid Email or Password", 401);
     }
 
-    const payload = { id: user.id, role: user.role };
+    const payload = {
+      id: user.id,
+      role: user.role,
+      isVerified: user.isVerified,
+    };
 
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
       expiresIn: EXPIRED_ACCESS_TOKEN_JWT,

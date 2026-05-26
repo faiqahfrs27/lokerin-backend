@@ -22,7 +22,7 @@ export class AuthMiddleware {
 
       // kalo variable token ga keisi juga, berarti tokennya ga ada.
       if (!token) {
-        throw new ApiError("No token provided", 401);
+        return next(new ApiError("No token provided", 401));
       }
 
       try {
@@ -44,7 +44,7 @@ export class AuthMiddleware {
       const userRole = res.locals.user?.role;
 
       if (!userRole || !roles.includes(userRole)) {
-        throw new ApiError("You dont have access.", 403);
+        return next(new ApiError("You dont have access.", 403));
       }
 
       next();
@@ -56,7 +56,7 @@ export class AuthMiddleware {
       const isVerified = res.locals.user?.isVerified;
 
       if (!isVerified) {
-        throw new ApiError("Please verify your email first.", 422);
+        return next(new ApiError("Please verify your email first.", 422));
       }
 
       next();
