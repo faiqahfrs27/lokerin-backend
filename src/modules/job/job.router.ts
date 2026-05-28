@@ -3,6 +3,7 @@ import { Role } from "../../../generated/prisma/enums.js";
 import { AuthMiddleware } from "../../middlewares/auth.middleware.js";
 import { ValidationMiddleware } from "../../middlewares/validation.middleware.js";
 import { CreateJobDTO } from "./dto/create-job.dto.js";
+import { QueryJobDTO } from "./dto/query-job.dto.js";
 import { UpdateJobDTO } from "./dto/update-job.dto.js";
 import { JobController } from "./job.controller.js";
 
@@ -13,30 +14,58 @@ export class JobRouter {
     private jobController: JobController,
     private validationMiddleware: ValidationMiddleware,
     private authMiddleware: AuthMiddleware,
-
   ) {
     this.router = Router();
     this.initRoutes();
   }
 
   private initRoutes = () => {
+    const JWT_SECRET = process.env.JWT_SECRET!;
+
+    this.router.get(
+      "/",
+      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyRole([Role.admin]),
+      this.validationMiddleware.validateQuery(QueryJobDTO),
+      this.jobController.getJobs,
+    );
+
     this.router.post(
       "/",
-      this.authMiddleware.verifyToken,
+      this.authMiddleware.verifyToken(JWT_SECRET),
       this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateBody(CreateJobDTO),
       this.jobController.createJob,
     );
 
-    this.router.get("/:id", this.jobController.getJobById);
+    this.router.get(
+      "/:id",
+      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyRole([Role.admin]),
+      this.jobController.getJobById,
+    );
 
     this.router.patch(
       "/:id",
+      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateBody(UpdateJobDTO),
       this.jobController.updateJob,
     );
 
-    this.router.delete("/:id", this.jobController.deleteJob);
+    this.router.patch(
+      "/:id/publish",
+      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyRole([Role.admin]),
+      this.jobController.togglePublish,
+    );
+
+    this.router.delete(
+      "/:id",
+      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyRole([Role.admin]),
+      this.jobController.deleteJob,
+    );
   };
 
   getRouter = () => {
