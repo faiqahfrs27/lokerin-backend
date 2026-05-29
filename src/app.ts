@@ -31,6 +31,10 @@ import { JobService } from "./modules/job/job.service.js";
 import { JobController } from "./modules/job/job.controller.js";
 import { JobRouter } from "./modules/job/job.router.js";
 import cookieParser from "cookie-parser";
+import { AssessmentService } from "./modules/assessment/assessment.service.js";
+import { QuestionService } from "./modules/assessment/question.service.js";
+import { AssessmentController } from "./modules/assessment/assessment.controller.js";
+import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
 
 export class App {
   app: Express;
@@ -68,6 +72,10 @@ export class App {
     //jobService
     const jobService = new JobService(prisma);
 
+    //assessmentService
+    const assessmentService = new AssessmentService(prisma);
+    const questionService = new QuestionService(prisma);
+
     // controllers
     const sampleController = new SampleController(sampleService);
     const subscriptionPlanController = new SubscriptionPlanController(
@@ -85,6 +93,12 @@ export class App {
 
     //jobController
     const jobController = new JobController(jobService);
+
+    //assessmentController
+    const assessmentController = new AssessmentController(
+      assessmentService,
+      questionService,
+    );
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -111,11 +125,18 @@ export class App {
       authMiddleware,
     );
 
+    const assessmentRouter = new AssessmentRouter(
+      assessmentController,
+      validationMiddleware,
+      authMiddleware,
+    );
+
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
+    this.app.use("/api/assessments", assessmentRouter.getRouter());
   }
 
   private errorMiddleware() {
