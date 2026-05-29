@@ -1,7 +1,8 @@
-import { Job, PrismaClient } from "../../../generated/prisma/client.js";
+import { Job, Prisma, PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { CreateJobDTO } from "./dto/create-job.dto.js";
 import { UpdateJobDTO } from "./dto/update-job.dto.js";
+import { QueryJobDTO } from "./dto/query-job.dto.js";
 
 export class JobService {
   constructor(private prisma: PrismaClient) {}
@@ -54,6 +55,49 @@ export class JobService {
     });
   };
 
+  getJobs = async (companyId: string, query: QueryJobDTO) => {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const sortBy = query.sortBy ?? "createdAt";
+    const sortOrder = query.sortOrder ?? "desc";
+
+    const where: Prisma.JobWhereInput = { companyId };
+
+    if (query.search) {
+      where.title = { contains: query.search, mode: "insensitive" };
+    }
+    if (query.categoryId) {
+      where.categoryId = query.categoryId;
+    }
+    if (query.city) {
+      where.city = { contains: query.city, mode: "insensitive" };
+    }
+    if (query.isPublished !== undefined) {
+      where.isPublished = query.isPublished === "true";
+    }
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.job.findMany({
+        where,
+        include: { category: { select: { id: true, name: true } } },
+        orderBy: { [sortBy]: sortOrder },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.job.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  };
+
   getJobById = async (jobId: string, companyId: string) => {
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
@@ -72,8 +116,6 @@ export class JobService {
       await this.assertCategoryExists(body.categoryId);
     }
 
-    // Prisma treats `undefined` as "don't update this field" sejak v3.
-    // Jadi ga perlu conditional spread, cukup pass langsung.
     return this.prisma.job.update({
       where: { id: jobId },
       data: {
@@ -87,6 +129,15 @@ export class JobService {
         tags: body.tags,
         hasTest: body.hasTest,
       },
+    });
+  };
+
+  togglePublish = async (jobId: string, companyId: string) => {
+    const job = await this.getJobOrThrow(jobId, companyId);
+
+    return this.prisma.job.update({
+      where: { id: jobId },
+      data: { isPublished: !job.isPublished },
     });
   };
 
