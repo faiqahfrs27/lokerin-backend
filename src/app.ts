@@ -36,6 +36,9 @@ import { QuestionService } from "./modules/assessment/question.service.js";
 import { AssessmentController } from "./modules/assessment/assessment.controller.js";
 import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
 import { corsOptions } from "./config/cors.js";
+import { ApplicantService } from "./modules/applicant/applicant.service.js";
+import { ApplicantController } from "./modules/applicant/applicant.controller.js";
+import { ApplicantRouter } from "./modules/applicant/applicant.router.js";
 
 export class App {
   app: Express;
@@ -77,6 +80,9 @@ export class App {
     const assessmentService = new AssessmentService(prisma);
     const questionService = new QuestionService(prisma);
 
+    //applicantService
+    const applicantService = new ApplicantService(prisma);
+
     // controllers
     const sampleController = new SampleController(sampleService);
     const subscriptionPlanController = new SubscriptionPlanController(
@@ -100,6 +106,9 @@ export class App {
       assessmentService,
       questionService,
     );
+
+    //applicantController
+    const applicantController = new ApplicantController(applicantService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -132,12 +141,19 @@ export class App {
       authMiddleware,
     );
 
+    const applicantRouter = new ApplicantRouter(
+      applicantController,
+      validationMiddleware,
+      authMiddleware,
+    );
+
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
+    this.app.use("/api/applicants", applicantRouter.getRouter());
   }
 
   private errorMiddleware() {
