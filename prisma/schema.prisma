@@ -65,11 +65,12 @@ model User {
   updatedAt     DateTime       @updatedAt @map("updated_at")
   deletedAt     DateTime?      @map("deleted_at")
 
-  profile       UserProfile?
-  company       Company?       @relation(fields: [companyId], references: [id])
-  verifications Verification[]
-  savedJobs     SavedJob[]
-  applications  Application[]
+  profile             UserProfile?
+  company             Company?             @relation(fields: [companyId], references: [id])
+  passwordResetTokens PasswordResetToken[]
+  verifications       Verification[]
+  savedJobs           SavedJob[]
+  applications        Application[]
 
   @@index([email])
   @@map("users")
@@ -91,6 +92,18 @@ model UserProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @db.Uuid
+  expiredAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 model RefreshToken {
@@ -224,13 +237,13 @@ model SkillAssessment {
 }
 
 model AssessmentQuestion {
-  id           String   @id @default(uuid()) @db.Uuid
-  assessmentId String   @map("assessment_id") @db.Uuid
-  question     String   @db.Text
+  id           String    @id @default(uuid()) @db.Uuid
+  assessmentId String    @map("assessment_id") @db.Uuid
+  question     String    @db.Text
   options      String[]
-  correctIndex Int      @map("correct_index")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  correctIndex Int       @map("correct_index")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")
 
   assessment SkillAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)

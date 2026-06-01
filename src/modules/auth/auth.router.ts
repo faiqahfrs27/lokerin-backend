@@ -9,6 +9,8 @@ import { VerifyEmailDTO } from "./verify-email/dto/verify-email.dto.js";
 import { LoginController } from "./login/login.controller.js";
 import { LoginDTO } from "./login/dto/login.dto.js";
 import { LogoutController } from "./logout/logout.controller.js";
+import { ForgotPasswordDTO } from "./forgot-password/dto/forgot-password.dto.js";
+import { ForgotPasswordController } from "./forgot-password/forgot-password.controller.js";
 
 export class AuthRouter {
   router: Router;
@@ -19,6 +21,7 @@ export class AuthRouter {
     private verifyEmailController: VerifyEmailController,
     private resendVerificationController: ResendVerificationController,
     private loginController: LoginController,
+    private forgotPasswordController: ForgotPasswordController,
     private logoutController: LogoutController,
   ) {
     this.router = Router();
@@ -47,6 +50,12 @@ export class AuthRouter {
       "/login",
       this.validationMiddleware.validateBody(LoginDTO),
       this.loginController.login,
+    );
+
+    this.router.post(
+      "/forgot-password",
+      this.validationMiddleware.validateBody(ForgotPasswordDTO),
+      this.forgotPasswordController.forgotPassword,
     );
 
     this.router.post("/logout", this.logoutController.logout);

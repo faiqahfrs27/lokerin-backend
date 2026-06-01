@@ -1,21 +1,23 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Express } from "express";
 import "reflect-metadata";
+import { corsOptions } from "./config/cors.js";
 import { loggerHttp } from "./lib/logger-http.js";
 import { prisma } from "./lib/prisma.js";
+import { AuthMiddleware } from "./middlewares/auth.middleware.js";
 import {
   errorMiddleware,
   notFoundMiddleware,
 } from "./middlewares/error.middleware.js";
 import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
-import { AuthMiddleware } from "./middlewares/auth.middleware.js";
-import { SampleController } from "./modules/sample/sample.controller.js";
-import { SampleRouter } from "./modules/sample/sample.router.js";
-import { SampleService } from "./modules/sample/sample.service.js";
-import { SubscriptionPlanService } from "./modules/subscriptions/subscription-plan.service.js";
-import { SubscriptionPlanController } from "./modules/subscriptions/subscription-plan.controller.js";
-import { SubscriptionPlanRouter } from "./modules/subscriptions/subscription-plan.router.js";
+import { AssessmentController } from "./modules/assessment/assessment.controller.js";
+import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
+import { AssessmentService } from "./modules/assessment/assessment.service.js";
+import { QuestionService } from "./modules/assessment/question.service.js";
 import { AuthRouter } from "./modules/auth/auth.router.js";
+import { ForgotPasswordController } from "./modules/auth/forgot-password/forgot-password.controller.js";
+import { ForgotPasswordService } from "./modules/auth/forgot-password/forgot-password.service.js";
 import { LoginController } from "./modules/auth/login/login.controller.js";
 import { LoginService } from "./modules/auth/login/login.service.js";
 import { LogoutController } from "./modules/auth/logout/logout.controller.js";
@@ -26,19 +28,19 @@ import { ResendVerificationController } from "./modules/auth/resend-verification
 import { ResendVerificationService } from "./modules/auth/resend-verification/resend-verification.service.js";
 import { VerifyEmailController } from "./modules/auth/verify-email/verify-email.controller.js";
 import { VerifyEmailService } from "./modules/auth/verify-email/verify-email.service.js";
-import { MailService } from "./modules/mail/mail.service.js";
-import { JobService } from "./modules/job/job.service.js";
 import { JobController } from "./modules/job/job.controller.js";
 import { JobRouter } from "./modules/job/job.router.js";
-import cookieParser from "cookie-parser";
-import { AssessmentService } from "./modules/assessment/assessment.service.js";
-import { QuestionService } from "./modules/assessment/question.service.js";
-import { AssessmentController } from "./modules/assessment/assessment.controller.js";
-import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
-import { corsOptions } from "./config/cors.js";
 import { ApplicantService } from "./modules/applicant/applicant.service.js";
 import { ApplicantController } from "./modules/applicant/applicant.controller.js";
 import { ApplicantRouter } from "./modules/applicant/applicant.router.js";
+import { JobService } from "./modules/job/job.service.js";
+import { MailService } from "./modules/mail/mail.service.js";
+import { SampleController } from "./modules/sample/sample.controller.js";
+import { SampleRouter } from "./modules/sample/sample.router.js";
+import { SampleService } from "./modules/sample/sample.service.js";
+import { SubscriptionPlanController } from "./modules/subscriptions/subscription-plan.controller.js";
+import { SubscriptionPlanRouter } from "./modules/subscriptions/subscription-plan.router.js";
+import { SubscriptionPlanService } from "./modules/subscriptions/subscription-plan.service.js";
 
 export class App {
   app: Express;
@@ -71,6 +73,10 @@ export class App {
       mailService,
     );
     const loginService = new LoginService(prisma);
+    const forgotPasswordService = new ForgotPasswordService(
+      prisma,
+      mailService,
+    );
     const logoutService = new LogoutService(prisma);
 
     //jobService
@@ -96,6 +102,9 @@ export class App {
       resendVerificationService,
     );
     const loginCotroller = new LoginController(loginService);
+    const forgotPasswordController = new ForgotPasswordController(
+      forgotPasswordService,
+    );
     const logoutController = new LogoutController(logoutService);
 
     //jobController
@@ -127,6 +136,7 @@ export class App {
       verifyEmailController,
       resendVerificationController,
       loginCotroller,
+      forgotPasswordController,
       logoutController,
     );
     const jobRouter = new JobRouter(
