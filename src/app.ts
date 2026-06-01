@@ -35,6 +35,7 @@ import { AssessmentService } from "./modules/assessment/assessment.service.js";
 import { QuestionService } from "./modules/assessment/question.service.js";
 import { AssessmentController } from "./modules/assessment/assessment.controller.js";
 import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
+import { corsOptions } from "./config/cors.js";
 
 export class App {
   app: Express;
@@ -45,7 +46,7 @@ export class App {
   }
 
   private configure() {
-    this.app.use(cors());
+    this.app.use(cors(corsOptions));
     this.app.use(loggerHttp);
     this.app.use(express.json());
     this.app.use(cookieParser());
@@ -133,7 +134,7 @@ export class App {
 
     // entry point
     this.app.use("/samples", router.getRouter());
-    this.app.use("/subscription-plans", subscriptionPlanRouter.getRouter());
+    this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
