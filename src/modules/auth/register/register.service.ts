@@ -95,7 +95,7 @@ export class RegisterService {
 
     // 6. Kirim email verifikasi (di luar transaction)
     const recipientName = role === Role.admin ? body.companyName! : body.name;
-    const verifyUrl = `${process.env.PORT}/api/auth/verify-email?token=${token}`;
+    const verifyUrl = `${process.env.BASE_URL_FE}/verify-email?token=${token}`;
 
     try {
       await this.mailService.sendMail({
