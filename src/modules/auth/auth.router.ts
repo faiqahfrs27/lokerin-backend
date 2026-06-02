@@ -11,6 +11,8 @@ import { LoginDTO } from "./login/dto/login.dto.js";
 import { LogoutController } from "./logout/logout.controller.js";
 import { ForgotPasswordDTO } from "./forgot-password/dto/forgot-password.dto.js";
 import { ForgotPasswordController } from "./forgot-password/forgot-password.controller.js";
+import { ResetPasswordController } from "./reset-password/reset-password.controller.js";
+import { ResetPasswordDTO } from "./reset-password/dto/reset-password.dto.js";
 
 export class AuthRouter {
   router: Router;
@@ -22,6 +24,7 @@ export class AuthRouter {
     private resendVerificationController: ResendVerificationController,
     private loginController: LoginController,
     private forgotPasswordController: ForgotPasswordController,
+    private resetPasswordController: ResetPasswordController,
     private logoutController: LogoutController,
   ) {
     this.router = Router();
@@ -56,6 +59,12 @@ export class AuthRouter {
       "/forgot-password",
       this.validationMiddleware.validateBody(ForgotPasswordDTO),
       this.forgotPasswordController.forgotPassword,
+    );
+
+    this.router.post(
+      "/reset-password/:token",
+      this.validationMiddleware.validateBody(ResetPasswordDTO),
+      this.resetPasswordController.resetPassword,
     );
 
     this.router.post("/logout", this.logoutController.logout);

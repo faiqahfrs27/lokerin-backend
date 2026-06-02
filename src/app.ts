@@ -41,6 +41,8 @@ import { SampleService } from "./modules/sample/sample.service.js";
 import { SubscriptionPlanController } from "./modules/subscriptions/subscription-plan.controller.js";
 import { SubscriptionPlanRouter } from "./modules/subscriptions/subscription-plan.router.js";
 import { SubscriptionPlanService } from "./modules/subscriptions/subscription-plan.service.js";
+import { ResetPasswordService } from "./modules/auth/reset-password/reset-password.service.js";
+import { ResetPasswordController } from "./modules/auth/reset-password/reset-password.controller.js";
 
 export class App {
   app: Express;
@@ -77,6 +79,7 @@ export class App {
       prisma,
       mailService,
     );
+    const resetPasswordService = new ResetPasswordService(prisma);
     const logoutService = new LogoutService(prisma);
 
     //jobService
@@ -104,6 +107,9 @@ export class App {
     const loginCotroller = new LoginController(loginService);
     const forgotPasswordController = new ForgotPasswordController(
       forgotPasswordService,
+    );
+    const resetPasswordController = new ResetPasswordController(
+      resetPasswordService,
     );
     const logoutController = new LogoutController(logoutService);
 
@@ -137,6 +143,7 @@ export class App {
       resendVerificationController,
       loginCotroller,
       forgotPasswordController,
+      resetPasswordController,
       logoutController,
     );
     const jobRouter = new JobRouter(
