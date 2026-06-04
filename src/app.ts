@@ -46,6 +46,8 @@ import { SubscriptionPlanRouter } from "./modules/subscriptions/subscription-pla
 import { SubscriptionPlanService } from "./modules/subscriptions/subscription-plan.service.js";
 import { ResetPasswordService } from "./modules/auth/reset-password/reset-password.service.js";
 import { ResetPasswordController } from "./modules/auth/reset-password/reset-password.controller.js";
+import { ProfileService } from "./modules/auth/profile/profile.service.js";
+import { ProfileController } from "./modules/auth/profile/profile.controller.js";
 
 export class App {
   app: Express;
@@ -84,6 +86,7 @@ export class App {
     );
     const resetPasswordService = new ResetPasswordService(prisma);
     const logoutService = new LogoutService(prisma);
+    const profileService = new ProfileService(prisma);
 
     //jobService
     const jobService = new JobService(prisma);
@@ -118,6 +121,7 @@ export class App {
       resetPasswordService,
     );
     const logoutController = new LogoutController(logoutService);
+    const profileController = new ProfileController(profileService);
 
     //jobController
     const jobController = new JobController(jobService);
@@ -148,14 +152,16 @@ export class App {
     );
 
     const authRouter = new AuthRouter(
-      registerController,
       validationMiddleware,
+      authMiddleware,
+      registerController,
       verifyEmailController,
       resendVerificationController,
       loginCotroller,
       forgotPasswordController,
       resetPasswordController,
       logoutController,
+      profileController,
     );
     const jobRouter = new JobRouter(
       jobController,

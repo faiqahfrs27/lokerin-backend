@@ -17,7 +17,7 @@ export class AssessmentResultRouter {
   }
 
   private initializedRoutes = () => {
-    const auth = this.authMiddleware.verifyToken(process.env.JWT_SECRET!);
+    const auth = this.authMiddleware.verifyToken();
 
     // GET /me
     this.router.get("/me", auth, this.assessmentResultController.getMyResults);

@@ -21,7 +21,7 @@ export class AssessmentRouter {
   }
 
   private initializedRoutes = () => {
-    const auth = this.authMiddleware.verifyToken(process.env.JWT_SECRET!);
+    const auth = this.authMiddleware.verifyToken();
     const devOnly = this.authMiddleware.verifyRole([Role.dev]);
 
     // ===== USER-FACING ROUTE (semua user yang login) =====
