@@ -15,6 +15,9 @@ import { AssessmentController } from "./modules/assessment/assessment.controller
 import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
 import { AssessmentService } from "./modules/assessment/assessment.service.js";
 import { QuestionService } from "./modules/assessment/question.service.js";
+import { AssessmentResultController } from "./modules/assessment-result/assessment-result.controller.js";
+import { AssessmentResultRouter } from "./modules/assessment-result/assessment-result.router.js";
+import { AssessmentResultService } from "./modules/assessment-result/assessment-result.service.js";
 import { AuthRouter } from "./modules/auth/auth.router.js";
 import { ForgotPasswordController } from "./modules/auth/forgot-password/forgot-password.controller.js";
 import { ForgotPasswordService } from "./modules/auth/forgot-password/forgot-password.service.js";
@@ -89,6 +92,9 @@ export class App {
     const assessmentService = new AssessmentService(prisma);
     const questionService = new QuestionService(prisma);
 
+    //assessmentResultService
+    const assessmentResultService = new AssessmentResultService(prisma);
+
     //applicantService
     const applicantService = new ApplicantService(prisma);
 
@@ -120,6 +126,11 @@ export class App {
     const assessmentController = new AssessmentController(
       assessmentService,
       questionService,
+    );
+
+    //assessmentResultController
+    const assessmentResultController = new AssessmentResultController(
+      assessmentResultService,
     );
 
     //applicantController
@@ -158,6 +169,12 @@ export class App {
       authMiddleware,
     );
 
+    const assessmentResultRouter = new AssessmentResultRouter(
+      assessmentResultController,
+      validationMiddleware,
+      authMiddleware,
+    );
+
     const applicantRouter = new ApplicantRouter(
       applicantController,
       validationMiddleware,
@@ -170,6 +187,7 @@ export class App {
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
+    this.app.use("/api/assessment-results", assessmentResultRouter.getRouter());
     this.app.use("/api/applicants", applicantRouter.getRouter());
   }
 

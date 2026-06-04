@@ -6,6 +6,28 @@ import { UpdateAssessmentDTO } from "./dto/update-assessment.dto.js";
 export class AssessmentService {
   constructor(private prisma: PrismaClient) {}
 
+  // ===== USER-FACING =====
+  getPublishedAssessments = async () => {
+    return await this.prisma.skillAssessment.findMany({
+      where: {
+        deletedAt: null,
+        isPublished: true,
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        skillCategory: true,
+        passingScore: true,
+        durationMin: true,
+        badgePhoto: true,
+        createdAt: true,
+        _count: { select: { questions: true } },
+      },
+    });
+  };
+
+  // ===== DEV-ONLY =====
   getAssessments = async () => {
     return await this.prisma.skillAssessment.findMany({
       where: { deletedAt: null },
