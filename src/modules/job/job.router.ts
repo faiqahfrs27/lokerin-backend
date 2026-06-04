@@ -20,11 +20,9 @@ export class JobRouter {
   }
 
   private initRoutes = () => {
-    const JWT_SECRET = process.env.JWT_SECRET!;
-
     this.router.get(
       "/",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateQuery(QueryJobDTO),
       this.jobController.getJobs,
@@ -32,7 +30,7 @@ export class JobRouter {
 
     this.router.post(
       "/",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateBody(CreateJobDTO),
       this.jobController.createJob,
@@ -40,14 +38,14 @@ export class JobRouter {
 
     this.router.get(
       "/:id",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.jobController.getJobById,
     );
 
     this.router.patch(
       "/:id",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateBody(UpdateJobDTO),
       this.jobController.updateJob,
@@ -55,14 +53,14 @@ export class JobRouter {
 
     this.router.patch(
       "/:id/publish",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.jobController.togglePublish,
     );
 
     this.router.delete(
       "/:id",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.jobController.deleteJob,
     );

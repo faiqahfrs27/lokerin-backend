@@ -4,8 +4,9 @@ import { Role } from "../../generated/prisma/enums.js";
 import { ApiError } from "../utils/api-error.js";
 
 export class AuthMiddleware {
-  verifyToken = (secretKey: string) => {
+  verifyToken = () => {
     return (req: Request, res: Response, next: NextFunction) => {
+      const secretKey = process.env.JWT_SECRET!;
       let token: string | undefined;
 
       // kalo authBearerToken ada, masukin authBearerTokennya ke variable token

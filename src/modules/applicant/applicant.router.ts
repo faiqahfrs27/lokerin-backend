@@ -19,11 +19,9 @@ export class ApplicantRouter {
   }
 
   private initRoutes = () => {
-    const JWT_SECRET = process.env.JWT_SECRET!;
-
     this.router.get(
       "/",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateQuery(QueryApplicantDTO),
       this.applicantController.getApplicants,
@@ -31,14 +29,14 @@ export class ApplicantRouter {
 
     this.router.get(
       "/:id",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.applicantController.getApplicantById,
     );
 
     this.router.patch(
       "/:id/status",
-      this.authMiddleware.verifyToken(JWT_SECRET),
+      this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateBody(UpdateApplicantStatusDTO),
       this.applicantController.updateStatus,
