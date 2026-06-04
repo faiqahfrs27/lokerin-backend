@@ -7,6 +7,23 @@ import { QueryJobDTO } from "./dto/query-job.dto.js";
 export class JobService {
   constructor(private prisma: PrismaClient) {}
 
+  private resolveCompanyId = async (userId: string): Promise<string> => {
+    if (!userId) {
+      throw new ApiError("Unauthorized", 401);
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { companyId: true },
+    });
+
+    if (!user?.companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
+
+    return user.companyId;
+  };
+
   private getJobOrThrow = async (
     jobId: string,
     companyId: string,
@@ -36,7 +53,8 @@ export class JobService {
     }
   };
 
-  createJob = async (companyId: string, body: CreateJobDTO) => {
+  createJob = async (userId: string, body: CreateJobDTO) => {
+    const companyId = await this.resolveCompanyId(userId);
     await this.assertCategoryExists(body.categoryId);
 
     return this.prisma.job.create({
@@ -55,9 +73,11 @@ export class JobService {
     });
   };
 
-  getJobs = async (companyId: string, query: QueryJobDTO) => {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
+  getJobs = async (userId: string, query: QueryJobDTO) => {
+    const companyId = await this.resolveCompanyId(userId);
+
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
     const sortBy = query.sortBy ?? "createdAt";
     const sortOrder = query.sortOrder ?? "desc";
 
@@ -98,7 +118,9 @@ export class JobService {
     };
   };
 
-  getJobById = async (jobId: string, companyId: string) => {
+  getJobById = async (jobId: string, userId: string) => {
+    const companyId = await this.resolveCompanyId(userId);
+
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
       include: { category: { select: { id: true, name: true } } },
@@ -109,7 +131,8 @@ export class JobService {
     return job;
   };
 
-  updateJob = async (jobId: string, companyId: string, body: UpdateJobDTO) => {
+  updateJob = async (jobId: string, userId: string, body: UpdateJobDTO) => {
+    const companyId = await this.resolveCompanyId(userId);
     await this.getJobOrThrow(jobId, companyId);
 
     if (body.categoryId) {
@@ -132,7 +155,8 @@ export class JobService {
     });
   };
 
-  togglePublish = async (jobId: string, companyId: string) => {
+  togglePublish = async (jobId: string, userId: string) => {
+    const companyId = await this.resolveCompanyId(userId);
     const job = await this.getJobOrThrow(jobId, companyId);
 
     return this.prisma.job.update({
@@ -141,7 +165,8 @@ export class JobService {
     });
   };
 
-  deleteJob = async (jobId: string, companyId: string) => {
+  deleteJob = async (jobId: string, userId: string) => {
+    const companyId = await this.resolveCompanyId(userId);
     await this.getJobOrThrow(jobId, companyId);
 
     await this.prisma.job.delete({ where: { id: jobId } });
