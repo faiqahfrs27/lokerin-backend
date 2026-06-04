@@ -18,6 +18,10 @@ export class LoginService {
         email: body.email,
         deletedAt: null,
       },
+      include: {
+        profile: true, // untuk user biasa — fullName, dll
+        company: true, // untuk admin — nama company, dll
+      },
     });
 
     if (!user) {
@@ -30,10 +34,15 @@ export class LoginService {
       throw new ApiError("Invalid Email or Password", 401);
     }
 
+    if (!user.isVerified) {
+      throw new ApiError("Please verify your email first", 403);
+    }
+
     const payload = {
       id: user.id,
       role: user.role,
       isVerified: user.isVerified,
+      companyId: user.companyId ?? undefined,
     };
 
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
