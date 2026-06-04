@@ -8,6 +8,15 @@ export class AssessmentController {
     private questionService: QuestionService,
   ) {}
 
+  // ===== USER-FACING =====
+
+  getPublishedAssessments = async (req: Request, res: Response) => {
+    const result = await this.assessmentService.getPublishedAssessments();
+    res.status(200).send(result);
+  };
+
+  // ===== DEV-ONLY =====
+
   getAssessments = async (req: Request, res: Response) => {
     const result = await this.assessmentService.getAssessments();
     res.status(200).send(result);

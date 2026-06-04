@@ -24,6 +24,14 @@ export class AssessmentRouter {
     const auth = this.authMiddleware.verifyToken(process.env.JWT_SECRET!);
     const devOnly = this.authMiddleware.verifyRole([Role.dev]);
 
+    // ===== USER-FACING ROUTE (semua user yang login) =====
+    this.router.get(
+      "/published",
+      auth,
+      this.assessmentController.getPublishedAssessments,
+    );
+
+    // ===== DEV-ONLY ROUTES =====
     this.router.get(
       "/",
       auth,
