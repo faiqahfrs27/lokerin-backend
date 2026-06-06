@@ -48,6 +48,8 @@ import { ResetPasswordService } from "./modules/auth/reset-password/reset-passwo
 import { ResetPasswordController } from "./modules/auth/reset-password/reset-password.controller.js";
 import { ProfileService } from "./modules/auth/profile/profile.service.js";
 import { ProfileController } from "./modules/auth/profile/profile.controller.js";
+import { GoogleService } from "./modules/auth/google/google.service.js";
+import { GoogleController } from "./modules/auth/google/google.controller.js";
 
 export class App {
   app: Express;
@@ -85,6 +87,7 @@ export class App {
       mailService,
     );
     const resetPasswordService = new ResetPasswordService(prisma);
+    const googleService = new GoogleService(prisma);
     const logoutService = new LogoutService(prisma);
     const profileService = new ProfileService(prisma);
 
@@ -120,6 +123,7 @@ export class App {
     const resetPasswordController = new ResetPasswordController(
       resetPasswordService,
     );
+    const googleController = new GoogleController(googleService);
     const logoutController = new LogoutController(logoutService);
     const profileController = new ProfileController(profileService);
 
@@ -160,6 +164,7 @@ export class App {
       loginCotroller,
       forgotPasswordController,
       resetPasswordController,
+      googleController,
       logoutController,
       profileController,
     );

@@ -1,6 +1,9 @@
 import { hash } from "argon2";
 import { PrismaClient, Role } from "../../../../generated/prisma/client.js";
-import { VerificationType } from "../../../../generated/prisma/enums.js";
+import {
+  Provider,
+  VerificationType,
+} from "../../../../generated/prisma/enums.js";
 import { ApiError } from "../../../utils/api-error.js";
 import {
   generateVerificationToken,
@@ -66,7 +69,7 @@ export class RegisterService {
           email: body.email,
           passwordHash: hashedPassword,
           role,
-          provider: "local",
+          provider: Provider.CREDENTIALS,
           ...(companyId && { companyId }),
           ...(role === Role.user && {
             profile: {

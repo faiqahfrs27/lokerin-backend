@@ -30,6 +30,11 @@ enum ApplicationStatus {
   rejected
 }
 
+enum Provider {
+  CREDENTIALS
+  GOOGLE
+}
+
 model Sample {
   id        Int       @id @default(autoincrement())
   name      String
@@ -58,7 +63,7 @@ model User {
   passwordHash  String         @map("password_hash")
   role          Role           @default(user)
   isVerified    Boolean        @default(false) @map("is_verified")
-  provider      String? // null = local, otherwise 'google', 'github', etc.
+  provider      Provider       @default(CREDENTIALS)
   companyId     String?        @unique @map("company_id") @db.Uuid
   refreshTokens RefreshToken[]
   createdAt     DateTime       @default(now()) @map("created_at")
