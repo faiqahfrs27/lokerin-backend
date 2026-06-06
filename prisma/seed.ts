@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, Role } from "../generated/prisma/client.js";
+import { PrismaClient, Provider, Role } from "../generated/prisma/client.js";
 import { hash } from "argon2";
 
 const adapter = new PrismaPg(
@@ -21,7 +21,7 @@ async function main() {
       passwordHash: hashedPassword,
       role: Role.dev,
       isVerified: true,
-      provider: "local",
+      provider: Provider.CREDENTIALS,
     },
   });
 
