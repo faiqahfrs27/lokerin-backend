@@ -79,6 +79,7 @@ model User {
   assessmentResults   AssessmentResult[]
   badgesEarned        BadgeEarned[]
   certificates        Certificate[]
+  testAttempts        TestAttempt[]
 
   @@index([email])
   @@map("users")
@@ -184,10 +185,11 @@ model Job {
   hasTest     Boolean   @default(false) @map("has_test")
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  company      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  category     JobCategory   @relation(fields: [categoryId], references: [id])
-  savedBy      SavedJob[]
-  applications Application[]
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category         JobCategory       @relation(fields: [categoryId], references: [id])
+  savedBy          SavedJob[]
+  applications     Application[]
+  preSelectionTest PreSelectionTest?
 
   @@index([companyId])
   @@index([categoryId])
@@ -320,4 +322,55 @@ model Certificate {
   @@index([code])
   @@index([userId])
   @@map("certificates")
+}
+
+model PreSelectionTest {
+  id              String   @id @default(uuid()) @db.Uuid
+  jobId           String   @unique @map("job_id") @db.Uuid
+  title           String
+  description     String?  @db.Text
+  passingScore    Int      @default(75) @map("passing_score")
+  durationMinutes Int      @default(30) @map("duration_minutes")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  job       Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  questions TestQuestion[]
+  attempts  TestAttempt[]
+
+  @@index([jobId])
+  @@map("pre_selection_tests")
+}
+
+model TestQuestion {
+  id           String   @id @default(uuid()) @db.Uuid
+  testId       String   @map("test_id") @db.Uuid
+  questionText String   @map("question_text") @db.Text
+  options      String[]
+  correctIndex Int      @map("correct_index")
+  order        Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  test PreSelectionTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+  @@map("test_questions")
+}
+
+model TestAttempt {
+  id          String    @id @default(uuid()) @db.Uuid
+  testId      String    @map("test_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  score       Int
+  passed      Boolean
+  answers     Json
+  attemptedAt DateTime  @default(now()) @map("attempted_at")
+  completedAt DateTime? @map("completed_at")
+
+  test PreSelectionTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([testId])
+  @@index([userId])
+  @@map("test_attempts")
 }
