@@ -21,6 +21,14 @@ export class JobRouter {
 
   private initRoutes = () => {
     this.router.get(
+      "/public",
+      this.validationMiddleware.validateQuery(QueryJobDTO),
+      this.jobController.getPublicJobs,
+    );
+
+    this.router.get("/public/:id", this.jobController.getPublicJobById);
+
+    this.router.get(
       "/",
       this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),

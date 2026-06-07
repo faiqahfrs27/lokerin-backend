@@ -105,6 +105,49 @@ export class JobService {
     };
   };
 
+  getPublicJobs = async (query: QueryJobDTO) => {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
+    const sortBy = query.sortBy ?? "createdAt";
+    const sortOrder = query.sortOrder ?? "desc";
+
+    const where: Prisma.JobWhereInput = { isPublished: true };
+
+    if (query.search) {
+      where.title = { contains: query.search, mode: "insensitive" };
+    }
+    if (query.categoryId) {
+      where.categoryId = query.categoryId;
+    }
+    if (query.city) {
+      where.city = { contains: query.city, mode: "insensitive" };
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.job.findMany({
+        where,
+        include: {
+          category: { select: { id: true, name: true } },
+          company: { select: { id: true, name: true, city: true } },
+        },
+        orderBy: { [sortBy]: sortOrder },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.job.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  };
+
   getJobById = async (jobId: string, companyId: string | undefined) => {
     if (!companyId) {
       throw new ApiError("Your account is not linked to a company", 403);
@@ -117,6 +160,20 @@ export class JobService {
     if (!job) throw new ApiError("Job not found", 404);
     if (job.companyId !== companyId)
       throw new ApiError("You don't have access to this job", 403);
+    return job;
+  };
+
+  getPublicJobById = async (jobId: string) => {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        category: { select: { id: true, name: true } },
+        company: { select: { id: true, name: true, city: true } },
+      },
+    });
+    if (!job || !job.isPublished) {
+      throw new ApiError("Job not found", 404);
+    }
     return job;
   };
 

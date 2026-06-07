@@ -22,10 +22,22 @@ export class JobController {
     res.status(200).send(result);
   };
 
+  getPublicJobs = async (req: Request, res: Response) => {
+    const query = req.query as unknown as QueryJobDTO;
+    const result = await this.jobService.getPublicJobs(query);
+    res.status(200).send(result);
+  };
+
   getJobById = async (req: Request, res: Response) => {
     const companyId = this.getCompanyId(res);
     const id = req.params.id as string;
     const result = await this.jobService.getJobById(id, companyId);
+    res.status(200).send(result);
+  };
+
+  getPublicJobById = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const result = await this.jobService.getPublicJobById(id);
     res.status(200).send(result);
   };
 
