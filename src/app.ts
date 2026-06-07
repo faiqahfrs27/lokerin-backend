@@ -14,7 +14,9 @@ import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
 import { AssessmentController } from "./modules/assessment/assessment.controller.js";
 import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
 import { AssessmentService } from "./modules/assessment/assessment.service.js";
-import { QuestionService } from "./modules/assessment/question.service.js";
+import { AssessmentQuestionService } from "./modules/assessment-question/assessment-question.service.js";
+import { AssessmentQuestionController } from "./modules/assessment-question/assessment-question.controller.js";
+import { AssessmentQuestionRouter } from "./modules/assessment-question/assessment-question.router.js";
 import { AssessmentResultController } from "./modules/assessment-result/assessment-result.controller.js";
 import { AssessmentResultRouter } from "./modules/assessment-result/assessment-result.router.js";
 import { AssessmentResultService } from "./modules/assessment-result/assessment-result.service.js";
@@ -96,7 +98,7 @@ export class App {
 
     //assessmentService
     const assessmentService = new AssessmentService(prisma);
-    const questionService = new QuestionService(prisma);
+    const assessmentQuestionService = new AssessmentQuestionService(prisma);
 
     //assessmentResultService
     const assessmentResultService = new AssessmentResultService(prisma);
@@ -131,9 +133,11 @@ export class App {
     const jobController = new JobController(jobService);
 
     //assessmentController
-    const assessmentController = new AssessmentController(
-      assessmentService,
-      questionService,
+    const assessmentController = new AssessmentController(assessmentService);
+
+    //assessmentQuestionController
+    const assessmentQuestionController = new AssessmentQuestionController(
+      assessmentQuestionService,
     );
 
     //assessmentResultController
@@ -180,6 +184,12 @@ export class App {
       authMiddleware,
     );
 
+    const assessmentQuestionRouter = new AssessmentQuestionRouter(
+      assessmentQuestionController,
+      validationMiddleware,
+      authMiddleware,
+    );
+
     const assessmentResultRouter = new AssessmentResultRouter(
       assessmentResultController,
       validationMiddleware,
@@ -198,6 +208,7 @@ export class App {
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
+    this.app.use("/api/assessments", assessmentQuestionRouter.getRouter());
     this.app.use("/api/assessment-results", assessmentResultRouter.getRouter());
     this.app.use("/api/applicants", applicantRouter.getRouter());
   }

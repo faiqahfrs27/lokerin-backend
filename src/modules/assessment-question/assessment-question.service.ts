@@ -3,7 +3,7 @@ import { ApiError } from "../../utils/api-error.js";
 import { CreateQuestionDTO } from "./dto/create-question.dto.js";
 import { UpdateQuestionDTO } from "./dto/update-question.dto.js";
 
-export class QuestionService {
+export class AssessmentQuestionService {
   constructor(private prisma: PrismaClient) {}
 
   private ensureAssessmentExists = async (assessmentId: string) => {
