@@ -35,6 +35,9 @@ import { VerifyEmailController } from "./modules/auth/verify-email/verify-email.
 import { VerifyEmailService } from "./modules/auth/verify-email/verify-email.service.js";
 import { JobController } from "./modules/job/job.controller.js";
 import { JobRouter } from "./modules/job/job.router.js";
+import { JobCategoryController } from "./modules/job-category/job-category.controller.js";
+import { JobCategoryRouter } from "./modules/job-category/job-category.router.js";
+import { JobCategoryService } from "./modules/job-category/job-category.service.js";
 import { ApplicantService } from "./modules/applicant/applicant.service.js";
 import { ApplicantController } from "./modules/applicant/applicant.controller.js";
 import { ApplicantRouter } from "./modules/applicant/applicant.router.js";
@@ -96,6 +99,9 @@ export class App {
     //jobService
     const jobService = new JobService(prisma);
 
+    //jobCategoryService
+    const jobCategoryService = new JobCategoryService(prisma);
+
     //assessmentService
     const assessmentService = new AssessmentService(prisma);
     const assessmentQuestionService = new AssessmentQuestionService(prisma);
@@ -131,6 +137,9 @@ export class App {
 
     //jobController
     const jobController = new JobController(jobService);
+
+    //jobCategoryController
+    const jobCategoryController = new JobCategoryController(jobCategoryService);
 
     //assessmentController
     const assessmentController = new AssessmentController(assessmentService);
@@ -178,6 +187,11 @@ export class App {
       authMiddleware,
     );
 
+    const jobCategoryRouter = new JobCategoryRouter(
+      jobCategoryController,
+      authMiddleware,
+    );
+
     const assessmentRouter = new AssessmentRouter(
       assessmentController,
       validationMiddleware,
@@ -207,6 +221,7 @@ export class App {
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
+    this.app.use("/api/job-categories", jobCategoryRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
     this.app.use("/api/assessments", assessmentQuestionRouter.getRouter());
     this.app.use("/api/assessment-results", assessmentResultRouter.getRouter());

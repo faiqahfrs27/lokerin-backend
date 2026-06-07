@@ -14,21 +14,68 @@ export class ApplicantService {
       where: { id: applicationId },
       include: { job: { select: { companyId: true } } },
     });
-
     if (!application) {
       throw new ApiError("Application not found", 404);
     }
-
     if (application.job.companyId !== companyId) {
       throw new ApiError("You don't have access to this applicant", 403);
     }
-
     return application;
   };
 
-  getApplicants = async (companyId: string, query: QueryApplicantDTO) => {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
+  private buildProfileFilters = (query: QueryApplicantDTO) => {
+    const profileFilters: Prisma.UserProfileWhereInput = {};
+    let hasFilter = false;
+
+    if (query.search) {
+      profileFilters.fullName = {
+        contains: query.search,
+        mode: "insensitive",
+      };
+      hasFilter = true;
+    }
+
+    if (query.education) {
+      profileFilters.education = {
+        contains: query.education,
+        mode: "insensitive",
+      };
+      hasFilter = true;
+    }
+
+    if (query.minAge !== undefined || query.maxAge !== undefined) {
+      const birthDateFilter: { gte?: Date; lte?: Date } = {};
+      const today = new Date();
+
+      if (query.minAge !== undefined) {
+        const maxBirth = new Date(today);
+        maxBirth.setFullYear(today.getFullYear() - query.minAge);
+        birthDateFilter.lte = maxBirth;
+      }
+
+      if (query.maxAge !== undefined) {
+        const minBirth = new Date(today);
+        minBirth.setFullYear(today.getFullYear() - query.maxAge - 1);
+        birthDateFilter.gte = minBirth;
+      }
+
+      profileFilters.birthDate = birthDateFilter;
+      hasFilter = true;
+    }
+
+    return hasFilter ? profileFilters : null;
+  };
+
+  getApplicants = async (
+    companyId: string | undefined,
+    query: QueryApplicantDTO,
+  ) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
+
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
     const sortBy = query.sortBy ?? "appliedAt";
     const sortOrder = query.sortOrder ?? "desc";
 
@@ -42,21 +89,24 @@ export class ApplicantService {
     if (query.status) {
       where.status = query.status;
     }
-    if (query.search) {
-      where.user = {
-        profile: { fullName: { contains: query.search, mode: "insensitive" } },
-      };
-    }
-    if (query.education) {
-      where.user = {
-        ...(where.user as object),
-        profile: {
-          education: { contains: query.education, mode: "insensitive" },
-        },
-      };
+
+    const profileFilters = this.buildProfileFilters(query);
+    if (profileFilters) {
+      where.user = { profile: profileFilters };
     }
 
-    const [data, total] = await this.prisma.$transaction([
+    if (query.minSalary !== undefined || query.maxSalary !== undefined) {
+      const salaryFilter: { gte?: number; lte?: number } = {};
+      if (query.minSalary !== undefined) {
+        salaryFilter.gte = query.minSalary;
+      }
+      if (query.maxSalary !== undefined) {
+        salaryFilter.lte = query.maxSalary;
+      }
+      where.expectedSalary = salaryFilter;
+    }
+
+    const [data, total] = await Promise.all([
       this.prisma.application.findMany({
         where,
         include: {
@@ -89,9 +139,14 @@ export class ApplicantService {
     };
   };
 
-  getApplicantById = async (applicationId: string, companyId: string) => {
+  getApplicantById = async (
+    applicationId: string,
+    companyId: string | undefined,
+  ) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
     await this.getApplicationOrThrow(applicationId, companyId);
-
     return this.prisma.application.findUnique({
       where: { id: applicationId },
       include: {
@@ -103,9 +158,12 @@ export class ApplicantService {
 
   updateStatus = async (
     applicationId: string,
-    companyId: string,
+    companyId: string | undefined,
     body: UpdateApplicantStatusDTO,
   ) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
     await this.getApplicationOrThrow(applicationId, companyId);
 
     if (body.status === "rejected" && !body.rejectionReason) {
