@@ -7,23 +7,6 @@ import { QueryJobDTO } from "./dto/query-job.dto.js";
 export class JobService {
   constructor(private prisma: PrismaClient) {}
 
-  private resolveCompanyId = async (userId: string): Promise<string> => {
-    if (!userId) {
-      throw new ApiError("Unauthorized", 401);
-    }
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { companyId: true },
-    });
-
-    if (!user?.companyId) {
-      throw new ApiError("Your account is not linked to a company", 403);
-    }
-
-    return user.companyId;
-  };
-
   private getJobOrThrow = async (
     jobId: string,
     companyId: string,
@@ -53,8 +36,10 @@ export class JobService {
     }
   };
 
-  createJob = async (userId: string, body: CreateJobDTO) => {
-    const companyId = await this.resolveCompanyId(userId);
+  createJob = async (companyId: string | undefined, body: CreateJobDTO) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
     await this.assertCategoryExists(body.categoryId);
 
     return this.prisma.job.create({
@@ -73,8 +58,10 @@ export class JobService {
     });
   };
 
-  getJobs = async (userId: string, query: QueryJobDTO) => {
-    const companyId = await this.resolveCompanyId(userId);
+  getJobs = async (companyId: string | undefined, query: QueryJobDTO) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
 
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 10);
@@ -96,7 +83,7 @@ export class JobService {
       where.isPublished = query.isPublished === "true";
     }
 
-    const [data, total] = await this.prisma.$transaction([
+    const [data, total] = await Promise.all([
       this.prisma.job.findMany({
         where,
         include: { category: { select: { id: true, name: true } } },
@@ -118,8 +105,10 @@ export class JobService {
     };
   };
 
-  getJobById = async (jobId: string, userId: string) => {
-    const companyId = await this.resolveCompanyId(userId);
+  getJobById = async (jobId: string, companyId: string | undefined) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
 
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
@@ -131,8 +120,14 @@ export class JobService {
     return job;
   };
 
-  updateJob = async (jobId: string, userId: string, body: UpdateJobDTO) => {
-    const companyId = await this.resolveCompanyId(userId);
+  updateJob = async (
+    jobId: string,
+    companyId: string | undefined,
+    body: UpdateJobDTO,
+  ) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
     await this.getJobOrThrow(jobId, companyId);
 
     if (body.categoryId) {
@@ -155,8 +150,10 @@ export class JobService {
     });
   };
 
-  togglePublish = async (jobId: string, userId: string) => {
-    const companyId = await this.resolveCompanyId(userId);
+  togglePublish = async (jobId: string, companyId: string | undefined) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
     const job = await this.getJobOrThrow(jobId, companyId);
 
     return this.prisma.job.update({
@@ -165,8 +162,10 @@ export class JobService {
     });
   };
 
-  deleteJob = async (jobId: string, userId: string) => {
-    const companyId = await this.resolveCompanyId(userId);
+  deleteJob = async (jobId: string, companyId: string | undefined) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
     await this.getJobOrThrow(jobId, companyId);
 
     await this.prisma.job.delete({ where: { id: jobId } });

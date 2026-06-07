@@ -2,6 +2,7 @@ import { Type } from "class-transformer";
 import {
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
@@ -38,6 +39,32 @@ export class QueryApplicantDTO {
   @IsOptional()
   @IsString()
   education?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(15)
+  @Max(100)
+  minAge?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(15)
+  @Max(100)
+  maxAge?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minSalary?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxSalary?: number;
 
   @IsOptional()
   @IsIn(["appliedAt", "expectedSalary", "status"])

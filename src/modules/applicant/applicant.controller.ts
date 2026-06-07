@@ -1,17 +1,12 @@
 import { Request, Response } from "express";
-import { ApiError } from "../../utils/api-error.js";
 import { ApplicantService } from "./applicant.service.js";
 import { QueryApplicantDTO } from "./dto/query-applicant.dto.js";
 
 export class ApplicantController {
   constructor(private applicantService: ApplicantService) {}
 
-  private getCompanyId = (res: Response): string => {
-    const companyId = res.locals.user?.companyId;
-    if (!companyId) {
-      throw new ApiError("Your account is not linked to a company", 403);
-    }
-    return companyId;
+  private getCompanyId = (res: Response): string | undefined => {
+    return res.locals.user?.companyId;
   };
 
   getApplicants = async (req: Request, res: Response) => {
