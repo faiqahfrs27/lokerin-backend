@@ -1,12 +1,8 @@
 import { Request, Response } from "express";
 import { AssessmentService } from "./assessment.service.js";
-import { QuestionService } from "./question.service.js";
 
 export class AssessmentController {
-  constructor(
-    private assessmentService: AssessmentService,
-    private questionService: QuestionService,
-  ) {}
+  constructor(private assessmentService: AssessmentService) {}
 
   // ===== USER-FACING =====
 
@@ -45,27 +41,6 @@ export class AssessmentController {
   deleteAssessment = async (req: Request, res: Response) => {
     await this.assessmentService.deleteAssessment(req.params.id);
     res.status(200).send({ message: "Assessment deleted" });
-  };
-
-  addQuestion = async (req: Request, res: Response) => {
-    const result = await this.questionService.addQuestion(
-      req.params.id,
-      req.body,
-    );
-    res.status(201).send(result);
-  };
-
-  updateQuestion = async (req: Request, res: Response) => {
-    const result = await this.questionService.updateQuestion(
-      req.params.questionId,
-      req.body,
-    );
-    res.status(200).send(result);
-  };
-
-  deleteQuestion = async (req: Request, res: Response) => {
-    await this.questionService.deleteQuestion(req.params.questionId);
-    res.status(200).send({ message: "Question deleted" });
   };
 
   publishAssessment = async (req: Request, res: Response) => {

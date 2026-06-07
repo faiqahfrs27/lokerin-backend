@@ -3,10 +3,8 @@ import { AuthMiddleware } from "../../middlewares/auth.middleware.js";
 import { ValidationMiddleware } from "../../middlewares/validation.middleware.js";
 import { AssessmentController } from "./assessment.controller.js";
 import { CreateAssessmentDTO } from "./dto/create-assessment.dto.js";
-import { CreateQuestionDTO } from "./dto/create-question.dto.js";
 import { UpdateAssessmentDTO } from "./dto/update-assessment.dto.js";
 import { Role } from "../../../generated/prisma/enums.js";
-import { UpdateQuestionDTO } from "./dto/update-question.dto.js";
 
 export class AssessmentRouter {
   private router: Router;
@@ -66,29 +64,6 @@ export class AssessmentRouter {
       auth,
       devOnly,
       this.assessmentController.deleteAssessment,
-    );
-
-    this.router.post(
-      "/:id/questions",
-      auth,
-      devOnly,
-      this.validationMiddleware.validateBody(CreateQuestionDTO),
-      this.assessmentController.addQuestion,
-    );
-
-    this.router.patch(
-      "/:id/questions/:questionId",
-      auth,
-      devOnly,
-      this.validationMiddleware.validateBody(UpdateQuestionDTO),
-      this.assessmentController.updateQuestion,
-    );
-
-    this.router.delete(
-      "/:id/questions/:questionId",
-      auth,
-      devOnly,
-      this.assessmentController.deleteQuestion,
     );
 
     this.router.patch(
