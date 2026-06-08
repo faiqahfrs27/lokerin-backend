@@ -20,6 +20,12 @@ import { AssessmentQuestionRouter } from "./modules/assessment-question/assessme
 import { AssessmentResultController } from "./modules/assessment-result/assessment-result.controller.js";
 import { AssessmentResultRouter } from "./modules/assessment-result/assessment-result.router.js";
 import { AssessmentResultService } from "./modules/assessment-result/assessment-result.service.js";
+import { BadgeService } from "./modules/badge/badge.service.js";
+import { BadgeController } from "./modules/badge/badge.controller.js";
+import { BadgeRouter } from "./modules/badge/badge.router.js";
+import { CertificateService } from "./modules/certificate/certificate.service.js";
+import { CertificateController } from "./modules/certificate/certificate.controller.js";
+import { CertificateRouter } from "./modules/certificate/certificate.router.js";
 import { AuthRouter } from "./modules/auth/auth.router.js";
 import { ForgotPasswordController } from "./modules/auth/forgot-password/forgot-password.controller.js";
 import { ForgotPasswordService } from "./modules/auth/forgot-password/forgot-password.service.js";
@@ -130,6 +136,12 @@ export class App {
     //assessmentResultService
     const assessmentResultService = new AssessmentResultService(prisma);
 
+    //badgeService
+    const badgeService = new BadgeService(prisma);
+
+    //certificateService
+    const certificateService = new CertificateService(prisma);
+
     //applicantService
     const applicantService = new ApplicantService(prisma);
 
@@ -184,6 +196,12 @@ export class App {
     const assessmentResultController = new AssessmentResultController(
       assessmentResultService,
     );
+
+    //badgeController
+    const badgeController = new BadgeController(badgeService);
+
+    //certificateController
+    const certificateController = new CertificateController(certificateService);
 
     //applicantController
     const applicantController = new ApplicantController(applicantService);
@@ -252,6 +270,13 @@ export class App {
       authMiddleware,
     );
 
+    const badgeRouter = new BadgeRouter(badgeController, authMiddleware);
+
+    const certificateRouter = new CertificateRouter(
+      certificateController,
+      authMiddleware,
+    );
+
     const applicantRouter = new ApplicantRouter(
       applicantController,
       validationMiddleware,
@@ -280,6 +305,8 @@ export class App {
     this.app.use("/api/assessments", assessmentRouter.getRouter());
     this.app.use("/api/assessments", assessmentQuestionRouter.getRouter());
     this.app.use("/api/assessment-results", assessmentResultRouter.getRouter());
+    this.app.use("/api/badges", badgeRouter.getRouter());
+    this.app.use("/api/certificates", certificateRouter.getRouter());
     this.app.use("/api/applicants", applicantRouter.getRouter());
     this.app.use("/api/applications", applicationRouter.getRouter());
     this.app.use("/api/tests", preSelectionTestRouter.getRouter());

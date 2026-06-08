@@ -1,5 +1,7 @@
-import { PrismaClient } from "../../../generated/prisma/client.js";
+import { Prisma, PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
+
+type TxClient = Prisma.TransactionClient;
 
 export class AssessmentResultService {
   constructor(private prisma: PrismaClient) {}
@@ -90,7 +92,7 @@ export class AssessmentResultService {
     return { score, passed };
   };
 
-  // Helper: finalize attempt + auto-create badge/cert if passed
+  // Helper: finalize attempt + sync badge/cert (keep highest score)
   private finalizeAttempt = async (
     resultId: string,
     userId: string,
@@ -109,19 +111,70 @@ export class AssessmentResultService {
       });
 
       if (finalPassed) {
-        await tx.badgeEarned.create({
-          data: { userId, assessmentResultId: resultId, assessmentId },
-        });
-        await tx.certificate.create({
-          data: { userId, assessmentResultId: resultId, assessmentId },
-        });
+        // ===== BARU: ganti create langsung jadi syncCredentials =====
+        await this.syncCredentials(tx, userId, assessmentId, resultId, score);
       }
 
       return updated;
     });
   };
 
-  // 3. GET BY ID — Detail 1 attempt (owner only)
+  private syncCredentials = async (
+    tx: TxClient,
+    userId: string,
+    assessmentId: string,
+    resultId: string,
+    score: number,
+  ) => {
+    const existing = await tx.badgeEarned.findFirst({
+      where: { userId, assessmentId },
+      include: { result: { select: { score: true } } },
+    });
+
+    if (!existing) {
+      return await this.createCredentials(tx, userId, assessmentId, resultId);
+    }
+    if (score > (existing.result.score ?? 0)) {
+      await this.upgradeCredentials(
+        tx,
+        existing.id,
+        existing.assessmentResultId,
+        resultId,
+      );
+    }
+  };
+
+  private createCredentials = async (
+    tx: TxClient,
+    userId: string,
+    assessmentId: string,
+    resultId: string,
+  ) => {
+    await tx.badgeEarned.create({
+      data: { userId, assessmentResultId: resultId, assessmentId },
+    });
+    await tx.certificate.create({
+      data: { userId, assessmentResultId: resultId, assessmentId },
+    });
+  };
+
+  private upgradeCredentials = async (
+    tx: TxClient,
+    badgeId: string,
+    oldResultId: string,
+    newResultId: string,
+  ) => {
+    await tx.badgeEarned.update({
+      where: { id: badgeId },
+      data: { assessmentResultId: newResultId },
+    });
+    await tx.certificate.update({
+      where: { assessmentResultId: oldResultId },
+      data: { assessmentResultId: newResultId },
+    });
+  };
+
+  // 3. GET BY ID
   getResultById = async (userId: string, resultId: string) => {
     const result = await this.prisma.assessmentResult.findFirst({
       where: { id: resultId, userId },
