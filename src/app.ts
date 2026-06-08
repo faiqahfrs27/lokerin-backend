@@ -73,6 +73,9 @@ import { GoogleController } from "./modules/auth/google/google.controller.js";
 import { CloudinaryService } from "./modules/cloudinary/cloudinary.service.js";
 import { ProfileRouter } from "./modules/profile/profile.router.js";
 import { UploadMiddleware } from "./middlewares/upload.middleware.js";
+import { CompanyService } from "./modules/company/company.service.js";
+import { CompanyController } from "./modules/company/company.controller.js";
+import { CompanyRouter } from "./modules/company/company.router.js";
 
 export class App {
   app: Express;
@@ -122,6 +125,9 @@ export class App {
       cloudinaryService,
       mailService,
     );
+
+    //companyService
+    const companyService = new CompanyService(prisma, cloudinaryService);
 
     //jobService
     const jobService = new JobService(prisma);
@@ -178,6 +184,9 @@ export class App {
 
     //profileController
     const profileController = new ProfileController(profileService);
+
+    //companyController
+    const companyController = new CompanyController(companyService);
 
     //jobController
     const jobController = new JobController(jobService);
@@ -250,6 +259,13 @@ export class App {
       uploadMiddleware,
     );
 
+    const companyRouter = new CompanyRouter(
+      companyController,
+      validationMiddleware,
+      authMiddleware,
+      uploadMiddleware,
+    );
+
     const jobRouter = new JobRouter(
       jobController,
       validationMiddleware,
@@ -315,6 +331,7 @@ export class App {
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/auth/profile", profileRouter.getRouter());
+    this.app.use("/api/companies", companyRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
     this.app.use("/api/job-categories", jobCategoryRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
