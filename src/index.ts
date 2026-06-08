@@ -1,8 +1,10 @@
 import { App } from "./app.js";
+import { ensureDefaultCategories } from "./utils/seed-defaults.js";
 
-const main = () => {
+async function bootstrap() {
+  await ensureDefaultCategories();
   const app = new App();
   app.start();
-};
+}
 
-main();
+bootstrap();
