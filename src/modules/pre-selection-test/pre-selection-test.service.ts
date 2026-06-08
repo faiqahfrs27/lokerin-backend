@@ -5,6 +5,7 @@ import { UpdateTestDTO } from "./dto/update-test.dto.js";
 import { CreateQuestionDTO } from "./dto/create-question.dto.js";
 import { UpdateQuestionDTO } from "./dto/update-question.dto.js";
 import { QueryTestDTO } from "./dto/query-test.dto.js";
+import { SubmitAttemptDTO } from "./dto/submit-attempt.dto.js";
 
 export class PreSelectionTestService {
   constructor(private prisma: PrismaClient) {}
@@ -48,6 +49,18 @@ export class PreSelectionTestService {
     if (job.preSelectionTest) {
       throw new ApiError("This job already has a test", 409);
     }
+  };
+
+  private gradeAttempt = (
+    questions: { id: string; correctIndex: number }[],
+    answers: { questionId: string; selectedIndex: number }[],
+  ) => {
+    const correctMap = new Map(questions.map((q) => [q.id, q.correctIndex]));
+    let correctCount = 0;
+    for (const a of answers) {
+      if (correctMap.get(a.questionId) === a.selectedIndex) correctCount++;
+    }
+    return correctCount;
   };
 
   createTest = async (companyId: string | undefined, body: CreateTestDTO) => {
@@ -113,6 +126,29 @@ export class PreSelectionTestService {
         _count: { select: { attempts: true } },
       },
     });
+  };
+
+  getTestForJob = async (jobId: string) => {
+    const test = await this.prisma.preSelectionTest.findUnique({
+      where: { jobId },
+      include: {
+        job: { select: { id: true, title: true, isPublished: true } },
+        questions: {
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            questionText: true,
+            options: true,
+            order: true,
+          },
+        },
+      },
+    });
+    if (!test) throw new ApiError("Test not found for this job", 404);
+    if (!test.job.isPublished) {
+      throw new ApiError("Job is not published", 404);
+    }
+    return test;
   };
 
   updateTest = async (
@@ -205,5 +241,47 @@ export class PreSelectionTestService {
     await this.assertQuestionOwnership(questionId, companyId);
     await this.prisma.testQuestion.delete({ where: { id: questionId } });
     return { message: "Question deleted successfully" };
+  };
+
+  submitAttempt = async (
+    testId: string,
+    userId: string | undefined,
+    body: SubmitAttemptDTO,
+  ) => {
+    if (!userId) throw new ApiError("Not authenticated", 401);
+
+    const test = await this.prisma.preSelectionTest.findUnique({
+      where: { id: testId },
+      include: { questions: { select: { id: true, correctIndex: true } } },
+    });
+    if (!test) throw new ApiError("Test not found", 404);
+    if (test.questions.length === 0) {
+      throw new ApiError("This test has no questions", 400);
+    }
+
+    const correctCount = this.gradeAttempt(test.questions, body.answers);
+    const totalQuestions = test.questions.length;
+    const score = Math.round((correctCount / totalQuestions) * 100);
+    const passed = score >= test.passingScore;
+
+    const attempt = await this.prisma.testAttempt.create({
+      data: {
+        testId,
+        userId,
+        score,
+        passed,
+        answers: body.answers as unknown as Prisma.InputJsonValue,
+        completedAt: new Date(),
+      },
+    });
+
+    return {
+      attemptId: attempt.id,
+      score,
+      passed,
+      passingScore: test.passingScore,
+      totalQuestions,
+      correctAnswers: correctCount,
+    };
   };
 }

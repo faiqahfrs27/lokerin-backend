@@ -9,6 +9,10 @@ export class PreSelectionTestController {
     return res.locals.user?.companyId;
   };
 
+  private getUserId = (res: Response): string | undefined => {
+    return res.locals.user?.id;
+  };
+
   createTest = async (req: Request, res: Response) => {
     const companyId = this.getCompanyId(res);
     const result = await this.testService.createTest(companyId, req.body);
@@ -26,6 +30,12 @@ export class PreSelectionTestController {
     const companyId = this.getCompanyId(res);
     const id = req.params.id as string;
     const result = await this.testService.getTestById(id, companyId);
+    res.status(200).send(result);
+  };
+
+  getTestForJob = async (req: Request, res: Response) => {
+    const jobId = req.params.jobId as string;
+    const result = await this.testService.getTestForJob(jobId);
     res.status(200).send(result);
   };
 
@@ -66,5 +76,12 @@ export class PreSelectionTestController {
     const questionId = req.params.questionId as string;
     const result = await this.testService.deleteQuestion(questionId, companyId);
     res.status(200).send(result);
+  };
+
+  submitAttempt = async (req: Request, res: Response) => {
+    const userId = this.getUserId(res);
+    const id = req.params.id as string;
+    const result = await this.testService.submitAttempt(id, userId, req.body);
+    res.status(201).send(result);
   };
 }
