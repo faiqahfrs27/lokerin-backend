@@ -86,7 +86,10 @@ export class JobService {
     const [data, total] = await Promise.all([
       this.prisma.job.findMany({
         where,
-        include: { category: { select: { id: true, name: true } } },
+        include: {
+          category: { select: { id: true, name: true } },
+          _count: { select: { applications: true } },
+        },
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * limit,
         take: limit,
@@ -129,6 +132,7 @@ export class JobService {
         include: {
           category: { select: { id: true, name: true } },
           company: { select: { id: true, name: true, city: true } },
+          _count: { select: { applications: true } },
         },
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * limit,

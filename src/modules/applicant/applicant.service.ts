@@ -77,7 +77,7 @@ export class ApplicantService {
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 10);
     const sortBy = query.sortBy ?? "appliedAt";
-    const sortOrder = query.sortOrder ?? "desc";
+    const sortOrder = query.sortOrder ?? "asc";
 
     const where: Prisma.ApplicationWhereInput = {
       job: { companyId },
