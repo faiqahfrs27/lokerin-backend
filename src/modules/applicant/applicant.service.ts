@@ -66,6 +66,46 @@ export class ApplicantService {
     return hasFilter ? profileFilters : null;
   };
 
+  private findBestAttempt = async (userId: string, jobId: string) => {
+    const attempts = await this.prisma.testAttempt.findMany({
+      where: { userId, test: { jobId } },
+      include: { test: { select: { passingScore: true } } },
+      orderBy: { score: "desc" },
+      take: 1,
+    });
+    return attempts[0] ?? null;
+  };
+
+  private findBestAttemptsBatch = async (
+    pairs: { userId: string; jobId: string }[],
+  ) => {
+    if (pairs.length === 0) {
+      return new Map<
+        string,
+        Awaited<ReturnType<typeof this.findBestAttempt>>
+      >();
+    }
+    const userIds = [...new Set(pairs.map((p) => p.userId))];
+    const jobIds = [...new Set(pairs.map((p) => p.jobId))];
+
+    const attempts = await this.prisma.testAttempt.findMany({
+      where: {
+        userId: { in: userIds },
+        test: { jobId: { in: jobIds } },
+      },
+      include: { test: { select: { jobId: true, passingScore: true } } },
+      orderBy: { score: "desc" },
+    });
+
+    type Attempt = (typeof attempts)[number];
+    const map = new Map<string, Attempt>();
+    for (const a of attempts) {
+      const key = `${a.userId}-${a.test.jobId}`;
+      if (!map.has(key)) map.set(key, a);
+    }
+    return map;
+  };
+
   getApplicants = async (
     companyId: string | undefined,
     query: QueryApplicantDTO,
@@ -79,30 +119,18 @@ export class ApplicantService {
     const sortBy = query.sortBy ?? "appliedAt";
     const sortOrder = query.sortOrder ?? "asc";
 
-    const where: Prisma.ApplicationWhereInput = {
-      job: { companyId },
-    };
+    const where: Prisma.ApplicationWhereInput = { job: { companyId } };
 
-    if (query.jobId) {
-      where.jobId = query.jobId;
-    }
-    if (query.status) {
-      where.status = query.status;
-    }
+    if (query.jobId) where.jobId = query.jobId;
+    if (query.status) where.status = query.status;
 
     const profileFilters = this.buildProfileFilters(query);
-    if (profileFilters) {
-      where.user = { profile: profileFilters };
-    }
+    if (profileFilters) where.user = { profile: profileFilters };
 
     if (query.minSalary !== undefined || query.maxSalary !== undefined) {
       const salaryFilter: { gte?: number; lte?: number } = {};
-      if (query.minSalary !== undefined) {
-        salaryFilter.gte = query.minSalary;
-      }
-      if (query.maxSalary !== undefined) {
-        salaryFilter.lte = query.maxSalary;
-      }
+      if (query.minSalary !== undefined) salaryFilter.gte = query.minSalary;
+      if (query.maxSalary !== undefined) salaryFilter.lte = query.maxSalary;
       where.expectedSalary = salaryFilter;
     }
 
@@ -124,7 +152,7 @@ export class ApplicantService {
               },
             },
           },
-          job: { select: { id: true, title: true } },
+          job: { select: { id: true, title: true, hasTest: true } },
         },
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * limit,
@@ -133,8 +161,15 @@ export class ApplicantService {
       this.prisma.application.count({ where }),
     ]);
 
+    const pairs = data.map((a) => ({ userId: a.userId, jobId: a.jobId }));
+    const attemptsMap = await this.findBestAttemptsBatch(pairs);
+    const enriched = data.map((a) => ({
+      ...a,
+      testAttempt: attemptsMap.get(`${a.userId}-${a.jobId}`) ?? null,
+    }));
+
     return {
-      data,
+      data: enriched,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   };
@@ -147,13 +182,22 @@ export class ApplicantService {
       throw new ApiError("Your account is not linked to a company", 403);
     }
     await this.getApplicationOrThrow(applicationId, companyId);
-    return this.prisma.application.findUnique({
+    const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
       include: {
         user: { select: { id: true, email: true, profile: true } },
-        job: { select: { id: true, title: true, city: true } },
+        job: {
+          select: { id: true, title: true, city: true, hasTest: true },
+        },
       },
     });
+    if (!application) return null;
+
+    const testAttempt = await this.findBestAttempt(
+      application.userId,
+      application.jobId,
+    );
+    return { ...application, testAttempt };
   };
 
   updateStatus = async (
