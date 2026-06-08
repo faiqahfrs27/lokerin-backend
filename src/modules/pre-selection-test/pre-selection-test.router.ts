@@ -7,6 +7,7 @@ import { UpdateTestDTO } from "./dto/update-test.dto.js";
 import { CreateQuestionDTO } from "./dto/create-question.dto.js";
 import { UpdateQuestionDTO } from "./dto/update-question.dto.js";
 import { QueryTestDTO } from "./dto/query-test.dto.js";
+import { SubmitAttemptDTO } from "./dto/submit-attempt.dto.js";
 import { PreSelectionTestController } from "./pre-selection-test.controller.js";
 
 export class PreSelectionTestRouter {
@@ -22,7 +23,6 @@ export class PreSelectionTestRouter {
   }
 
   private initRoutes = () => {
-    // Question routes — declared BEFORE /:id so /questions/:questionId matches first
     this.router.patch(
       "/questions/:questionId",
       this.authMiddleware.verifyToken(),
@@ -46,7 +46,21 @@ export class PreSelectionTestRouter {
       this.controller.addQuestion,
     );
 
-    // Test CRUD
+    this.router.get(
+      "/by-job/:jobId",
+      this.authMiddleware.verifyToken(),
+      this.authMiddleware.verifyRole([Role.user]),
+      this.controller.getTestForJob,
+    );
+
+    this.router.post(
+      "/:id/attempt",
+      this.authMiddleware.verifyToken(),
+      this.authMiddleware.verifyRole([Role.user]),
+      this.validationMiddleware.validateBody(SubmitAttemptDTO),
+      this.controller.submitAttempt,
+    );
+
     this.router.get(
       "/",
       this.authMiddleware.verifyToken(),
