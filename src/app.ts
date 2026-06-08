@@ -42,6 +42,9 @@ import { ApplicantService } from "./modules/applicant/applicant.service.js";
 import { ApplicantController } from "./modules/applicant/applicant.controller.js";
 import { ApplicantRouter } from "./modules/applicant/applicant.router.js";
 import { JobService } from "./modules/job/job.service.js";
+import { PreSelectionTestService } from "./modules/pre-selection-test/pre-selection-test.service.js";
+import { PreSelectionTestController } from "./modules/pre-selection-test/pre-selection-test.controller.js";
+import { PreSelectionTestRouter } from "./modules/pre-selection-test/pre-selection-test.router.js";
 import { MailService } from "./modules/mail/mail.service.js";
 import { SampleController } from "./modules/sample/sample.controller.js";
 import { SampleRouter } from "./modules/sample/sample.router.js";
@@ -102,6 +105,9 @@ export class App {
     //jobCategoryService
     const jobCategoryService = new JobCategoryService(prisma);
 
+    //preSelectionTestService
+    const preSelectionTestService = new PreSelectionTestService(prisma);
+
     //assessmentService
     const assessmentService = new AssessmentService(prisma);
     const assessmentQuestionService = new AssessmentQuestionService(prisma);
@@ -140,6 +146,11 @@ export class App {
 
     //jobCategoryController
     const jobCategoryController = new JobCategoryController(jobCategoryService);
+
+    //preSelectionTestController
+    const preSelectionTestController = new PreSelectionTestController(
+      preSelectionTestService,
+    );
 
     //assessmentController
     const assessmentController = new AssessmentController(assessmentService);
@@ -216,6 +227,12 @@ export class App {
       authMiddleware,
     );
 
+    const preSelectionTestRouter = new PreSelectionTestRouter(
+      preSelectionTestController,
+      validationMiddleware,
+      authMiddleware,
+    );
+
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
@@ -226,6 +243,7 @@ export class App {
     this.app.use("/api/assessments", assessmentQuestionRouter.getRouter());
     this.app.use("/api/assessment-results", assessmentResultRouter.getRouter());
     this.app.use("/api/applicants", applicantRouter.getRouter());
+    this.app.use("/api/tests", preSelectionTestRouter.getRouter());
   }
 
   private errorMiddleware() {
