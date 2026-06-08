@@ -3,11 +3,11 @@ import { AuthMiddleware } from "../../middlewares/auth.middleware.js";
 import { ValidationMiddleware } from "../../middlewares/validation.middleware.js";
 import { ForgotPasswordDTO } from "./forgot-password/dto/forgot-password.dto.js";
 import { ForgotPasswordController } from "./forgot-password/forgot-password.controller.js";
+import { GoogleDTO } from "./google/dto/google.dto.js";
+import { GoogleController } from "./google/google.controller.js";
 import { LoginDTO } from "./login/dto/login.dto.js";
 import { LoginController } from "./login/login.controller.js";
 import { LogoutController } from "./logout/logout.controller.js";
-import { UpdateProfileDTO } from "./profile/dto/update-profile.dto.js";
-import { ProfileController } from "./profile/profile.controller.js";
 import { RegisterDTO } from "./register/dto/register.dto.js";
 import { RegisterController } from "./register/register.controller.js";
 import { ResendVerificationDTO } from "./resend-verification/dto/resend-verification.dto.js";
@@ -16,8 +16,6 @@ import { ResetPasswordDTO } from "./reset-password/dto/reset-password.dto.js";
 import { ResetPasswordController } from "./reset-password/reset-password.controller.js";
 import { VerifyEmailDTO } from "./verify-email/dto/verify-email.dto.js";
 import { VerifyEmailController } from "./verify-email/verify-email.controller.js";
-import { GoogleController } from "./google/google.controller.js";
-import { GoogleDTO } from "./google/dto/google.dto.js";
 
 export class AuthRouter {
   router: Router;
@@ -33,7 +31,6 @@ export class AuthRouter {
     private resetPasswordController: ResetPasswordController,
     private googleController: GoogleController,
     private logoutController: LogoutController,
-    private profileController: ProfileController,
   ) {
     this.router = Router();
     this.initRoutes();
@@ -82,19 +79,6 @@ export class AuthRouter {
     );
 
     this.router.post("/logout", this.logoutController.logout);
-
-    this.router.get(
-      "/profile",
-      this.authMiddleware.verifyToken(),
-      this.profileController.getProfile,
-    );
-
-    this.router.patch(
-      "/profile",
-      this.authMiddleware.verifyToken(),
-      this.validationMiddleware.validateBody(UpdateProfileDTO),
-      this.profileController.updateProfile,
-    );
   };
 
   getRouter = () => {

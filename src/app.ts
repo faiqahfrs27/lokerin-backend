@@ -54,10 +54,13 @@ import { SubscriptionPlanRouter } from "./modules/subscriptions/subscription-pla
 import { SubscriptionPlanService } from "./modules/subscriptions/subscription-plan.service.js";
 import { ResetPasswordService } from "./modules/auth/reset-password/reset-password.service.js";
 import { ResetPasswordController } from "./modules/auth/reset-password/reset-password.controller.js";
-import { ProfileService } from "./modules/auth/profile/profile.service.js";
-import { ProfileController } from "./modules/auth/profile/profile.controller.js";
+import { ProfileService } from "./modules/profile/profile.service.js";
+import { ProfileController } from "./modules/profile/profile.controller.js";
 import { GoogleService } from "./modules/auth/google/google.service.js";
 import { GoogleController } from "./modules/auth/google/google.controller.js";
+import { CloudinaryService } from "./modules/cloudinary/cloudinary.service.js";
+import { ProfileRouter } from "./modules/profile/profile.router.js";
+import { UploadMiddleware } from "./middlewares/upload.middleware.js";
 
 export class App {
   app: Express;
@@ -81,6 +84,9 @@ export class App {
     const sampleService = new SampleService(prisma);
     const subscriptionPlanService = new SubscriptionPlanService(prisma);
 
+    //cloudinaryService
+    const cloudinaryService = new CloudinaryService();
+
     //authService
     const mailService = new MailService();
     const registerService = new RegisterService(prisma, mailService);
@@ -97,7 +103,13 @@ export class App {
     const resetPasswordService = new ResetPasswordService(prisma);
     const googleService = new GoogleService(prisma);
     const logoutService = new LogoutService(prisma);
-    const profileService = new ProfileService(prisma);
+
+    //profileService
+    const profileService = new ProfileService(
+      prisma,
+      cloudinaryService,
+      mailService,
+    );
 
     //jobService
     const jobService = new JobService(prisma);
@@ -139,6 +151,8 @@ export class App {
     );
     const googleController = new GoogleController(googleService);
     const logoutController = new LogoutController(logoutService);
+
+    //profileController
     const profileController = new ProfileController(profileService);
 
     //jobController
@@ -171,6 +185,7 @@ export class App {
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
     const authMiddleware = new AuthMiddleware();
+    const uploadMiddleware = new UploadMiddleware();
 
     // routes
     const router = new SampleRouter(sampleController, validationMiddleware);
@@ -190,8 +205,15 @@ export class App {
       resetPasswordController,
       googleController,
       logoutController,
-      profileController,
     );
+
+    const profileRouter = new ProfileRouter(
+      profileController,
+      validationMiddleware,
+      authMiddleware,
+      uploadMiddleware,
+    );
+
     const jobRouter = new JobRouter(
       jobController,
       validationMiddleware,
@@ -237,6 +259,7 @@ export class App {
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
+    this.app.use("/api/auth/profile", profileRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
     this.app.use("/api/job-categories", jobCategoryRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
