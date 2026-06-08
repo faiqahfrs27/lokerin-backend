@@ -222,6 +222,7 @@ model Application {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  interview Interview?
 
   @@unique([userId, jobId])
   @@index([status])
@@ -373,4 +374,20 @@ model TestAttempt {
   @@index([testId])
   @@index([userId])
   @@map("test_attempts")
+}
+
+model Interview {
+  id            String   @id @default(uuid()) @db.Uuid
+  applicationId String   @unique @map("application_id") @db.Uuid
+  scheduledAt   DateTime @map("scheduled_at")
+  location      String?
+  notes         String?  @db.Text
+  reminderSent  Boolean  @default(false) @map("reminder_sent")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledAt])
+  @@map("interviews")
 }

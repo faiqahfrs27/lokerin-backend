@@ -54,6 +54,9 @@ import { JobService } from "./modules/job/job.service.js";
 import { PreSelectionTestService } from "./modules/pre-selection-test/pre-selection-test.service.js";
 import { PreSelectionTestController } from "./modules/pre-selection-test/pre-selection-test.controller.js";
 import { PreSelectionTestRouter } from "./modules/pre-selection-test/pre-selection-test.router.js";
+import { InterviewService } from "./modules/interview/interview.service.js";
+import { InterviewController } from "./modules/interview/interview.controller.js";
+import { InterviewRouter } from "./modules/interview/interview.router.js";
 import { MailService } from "./modules/mail/mail.service.js";
 import { SampleController } from "./modules/sample/sample.controller.js";
 import { SampleRouter } from "./modules/sample/sample.router.js";
@@ -129,6 +132,9 @@ export class App {
     //preSelectionTestService
     const preSelectionTestService = new PreSelectionTestService(prisma);
 
+    //InterviewService
+    const interviewService = new InterviewService(prisma);
+
     //assessmentService
     const assessmentService = new AssessmentService(prisma);
     const assessmentQuestionService = new AssessmentQuestionService(prisma);
@@ -183,6 +189,9 @@ export class App {
     const preSelectionTestController = new PreSelectionTestController(
       preSelectionTestService,
     );
+
+    //interviewController
+    const interviewController = new InterviewController(interviewService);
 
     //assessmentController
     const assessmentController = new AssessmentController(assessmentService);
@@ -295,6 +304,12 @@ export class App {
       authMiddleware,
     );
 
+    const interviewRouter = new InterviewRouter(
+      interviewController,
+      validationMiddleware,
+      authMiddleware,
+    );
+
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
@@ -310,6 +325,7 @@ export class App {
     this.app.use("/api/applicants", applicantRouter.getRouter());
     this.app.use("/api/applications", applicationRouter.getRouter());
     this.app.use("/api/tests", preSelectionTestRouter.getRouter());
+    this.app.use("/api/interviews", interviewRouter.getRouter());
   }
 
   private errorMiddleware() {
