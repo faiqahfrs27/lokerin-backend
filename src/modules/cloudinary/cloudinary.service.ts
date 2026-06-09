@@ -57,6 +57,30 @@ export class CloudinaryService {
     return response.data;
   }
 
+  // Upload file (PDF, dll) ke Cloudinary
+  async uploadFile(file: Express.Multer.File) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const params: Record<string, string | number> = { timestamp };
+    const signature = this.generateSignature(params);
+
+    const formData = new FormData();
+    formData.append("file", file.buffer, {
+      filename: file.originalname,
+      contentType: file.mimetype,
+    });
+    formData.append("api_key", this.apiKey);
+    formData.append("timestamp", timestamp.toString());
+    formData.append("signature", signature);
+
+    const response = await axios.post(
+      `https://api.cloudinary.com/v1_1/${this.cloudName}/raw/upload`,
+      formData,
+      { headers: formData.getHeaders() },
+    );
+
+    return response.data;
+  }
+
   // Hapus gambar dari Cloudinary berdasarkan URL
   async removeByUrl(secureUrl: string) {
     const publicId = this.extractPublicIdFromUrl(secureUrl);

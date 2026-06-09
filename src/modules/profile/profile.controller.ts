@@ -40,4 +40,15 @@ export class ProfileController {
     const result = await this.profileService.updateEmail(userId, req.body);
     res.status(200).send(result);
   };
+
+  uploadCv = async (req: Request, res: Response) => {
+    const userId = res.locals.user.id;
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ message: "No file uploaded" });
+      return;
+    }
+    const result = await this.profileService.uploadCv(userId, file);
+    res.status(200).send(result);
+  };
 }

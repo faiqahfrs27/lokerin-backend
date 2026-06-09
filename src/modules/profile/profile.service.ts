@@ -180,4 +180,9 @@ export class ProfileService {
 
     return { message: "Email updated. Please verify your new email." };
   };
+
+  uploadCv = async (userId: string, file: Express.Multer.File) => {
+    const result = await this.cloudinaryService.uploadFile(file);
+    return { cvUrl: result.secure_url };
+  };
 }
