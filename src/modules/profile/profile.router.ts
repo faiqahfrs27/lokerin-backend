@@ -54,6 +54,13 @@ export class ProfileRouter {
       this.validationMiddleware.validateBody(UpdateEmailDTO),
       this.profileController.updateEmail,
     );
+
+    this.router.patch(
+      "/cv",
+      this.authMiddleware.verifyToken(),
+      this.uploadMiddleware.upload(5, ["application/pdf"]).single("cv"),
+      this.profileController.uploadCv,
+    );
   };
 
   getRouter = () => this.router;
