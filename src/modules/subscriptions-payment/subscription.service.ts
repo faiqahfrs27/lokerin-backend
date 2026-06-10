@@ -1,6 +1,7 @@
 import { PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { CloudinaryService } from "../cloudinary/cloudinary.service.js";
+import { MailService } from "../mail/mail.service.js"; // ← TAMBAH
 
 const SUBSCRIPTION_DAYS = 30;
 
@@ -8,6 +9,7 @@ export class SubscriptionService {
   constructor(
     private prisma: PrismaClient,
     private cloudinaryService: CloudinaryService,
+    private mailService: MailService,
   ) {}
 
   // USER: subscribe to a plan + upload payment proof
@@ -95,25 +97,76 @@ export class SubscriptionService {
     const now = new Date();
     const end = new Date(now.getTime() + SUBSCRIPTION_DAYS * 86400000);
 
-    return await this.prisma.$transaction(async (tx) => {
-      await tx.payment.update({
+    const [, subscription] = await this.prisma.$transaction(async (tx) => {
+      const updatedPayment = await tx.payment.update({
         where: { id: paymentId },
         data: { status: "approved", approvedAt: now, approvedBy: devId },
       });
-      return await tx.subscription.update({
+      const updatedSub = await tx.subscription.update({
         where: { id: payment.subscriptionId },
         data: { status: "active", startDate: now, endDate: end },
+        include: {
+          user: {
+            select: { email: true, profile: { select: { fullName: true } } },
+          },
+          plan: { select: { name: true, price: true } },
+        },
       });
+      return [updatedPayment, updatedSub];
     });
+
+    const endDate = end.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    this.mailService
+      .sendMail({
+        to: subscription.user.email,
+        subject: "Your Lokerin subscription is now active!",
+        templateName: "transaction-payment-approved",
+        context: {
+          name: subscription.user.profile?.fullName ?? "there",
+          planName: subscription.plan.name,
+          amount: subscription.plan.price.toLocaleString("id-ID"),
+          endDate,
+          dashboardUrl: `${process.env.BASE_URL_FE}/dashboard/subscription`,
+        },
+      })
+      .catch(() => {});
+
+    return subscription;
   };
 
   // DEV: reject payment
   rejectPayment = async (paymentId: string) => {
     await this.getPendingPayment(paymentId);
-    return await this.prisma.payment.update({
+
+    const payment = await this.prisma.payment.update({
       where: { id: paymentId },
       data: { status: "rejected" },
+      include: {
+        user: {
+          select: { email: true, profile: { select: { fullName: true } } },
+        },
+        subscription: { include: { plan: { select: { name: true } } } },
+      },
     });
+
+    this.mailService
+      .sendMail({
+        to: payment.user.email,
+        subject: "Your payment not approved",
+        templateName: "transaction-payment-rejected",
+        context: {
+          name: payment.user.profile?.fullName ?? "there",
+          planName: payment.subscription.plan.name,
+          subscribeUrl: `${process.env.BASE_URL_FE}/dashboard/subscribe`,
+        },
+      })
+      .catch((err) => console.error("Reject email error:", err.message));
+
+    return payment;
   };
 
   // Helper: ensure payment exists and is still pending

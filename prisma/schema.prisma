@@ -35,6 +35,23 @@ enum Provider {
   GOOGLE
 }
 
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  approved
+  rejected
+}
+
+enum PaymentMethod {
+  manual_transfer
+  xendit
+}
+
 model Sample {
   id        Int       @id @default(autoincrement())
   name      String
@@ -46,15 +63,57 @@ model Sample {
 }
 
 model SubscriptionPlan {
-  id        String    @id @default(uuid()) @db.Uuid
-  name      String    @unique
-  price     Int
-  features  String[]
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String         @unique
+  price         Int
+  features      String[]
+  deletedAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
 
   @@map("subscription_plans")
+}
+
+model Subscription {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @map("user_id") @db.Uuid
+  planId    String             @map("plan_id") @db.Uuid
+  status    SubscriptionStatus @default(active)
+  startDate DateTime           @map("start_date")
+  endDate   DateTime           @map("end_date")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  subscriptionId String        @map("subscription_id") @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  amount         Int
+  method         PaymentMethod @default(manual_transfer)
+  status         PaymentStatus @default(pending)
+  proofUrl       String?       @map("proof_url")
+  approvedAt     DateTime?     @map("approved_at")
+  approvedBy     String?       @map("approved_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([userId])
+  @@index([status])
+  @@map("payments")
 }
 
 model User {
@@ -80,6 +139,8 @@ model User {
   badgesEarned        BadgeEarned[]
   certificates        Certificate[]
   testAttempts        TestAttempt[]
+  subscriptions       Subscription[]
+  payments            Payment[]
 
   @@index([email])
   @@map("users")
