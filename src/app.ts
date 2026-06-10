@@ -79,6 +79,7 @@ import { CompanyRouter } from "./modules/company/company.router.js";
 import { SubscriptionService } from "./modules/subscriptions-payment/subscription.service.js";
 import { SubscriptionController } from "./modules/subscriptions-payment/subscription.controller.js";
 import { SubscriptionRouter } from "./modules/subscriptions-payment/subscription.router.js";
+import { CronService } from "./modules/cron/cron.service.js";
 
 export class App {
   app: Express;
@@ -169,6 +170,10 @@ export class App {
       cloudinaryService,
       mailService,
     );
+
+    // cron jobs
+    const cronService = new CronService(prisma, mailService);
+    cronService.start();
 
     // controllers
     const sampleController = new SampleController(sampleService);
