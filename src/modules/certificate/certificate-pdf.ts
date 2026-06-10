@@ -28,7 +28,7 @@ const C = {
 };
 
 const makeQrBuffer = async (code: string) => {
-  const url = `${process.env.FRONTEND_URL}/verify/${code}`;
+  const url = `${process.env.BASE_URL_FE}/verify/${code}`;
   return await QRCode.toBuffer(url, { width: 120, margin: 1 });
 };
 

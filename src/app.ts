@@ -76,6 +76,9 @@ import { UploadMiddleware } from "./middlewares/upload.middleware.js";
 import { CompanyService } from "./modules/company/company.service.js";
 import { CompanyController } from "./modules/company/company.controller.js";
 import { CompanyRouter } from "./modules/company/company.router.js";
+import { SubscriptionService } from "./modules/subscriptions-payment/subscription.service.js";
+import { SubscriptionController } from "./modules/subscriptions-payment/subscription.controller.js";
+import { SubscriptionRouter } from "./modules/subscriptions-payment/subscription.router.js";
 
 export class App {
   app: Express;
@@ -160,6 +163,13 @@ export class App {
     //applicationService
     const applicationService = new ApplicationService(prisma);
 
+    //subscriptionService (subscribe + payment)
+    const subscriptionService = new SubscriptionService(
+      prisma,
+      cloudinaryService,
+      mailService,
+    );
+
     // controllers
     const sampleController = new SampleController(sampleService);
     const subscriptionPlanController = new SubscriptionPlanController(
@@ -226,6 +236,11 @@ export class App {
 
     //applicationController
     const applicationController = new ApplicationController(applicationService);
+
+    //subscriptionController
+    const subscriptionController = new SubscriptionController(
+      subscriptionService,
+    );
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -326,9 +341,17 @@ export class App {
       authMiddleware,
     );
 
+    const subscriptionRouter = new SubscriptionRouter(
+      subscriptionController,
+      authMiddleware,
+      validationMiddleware,
+      uploadMiddleware,
+    );
+
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
+    this.app.use("/api/subscriptions", subscriptionRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/auth/profile", profileRouter.getRouter());
     this.app.use("/api/companies", companyRouter.getRouter());
