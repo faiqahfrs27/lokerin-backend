@@ -35,7 +35,8 @@ export class PreSelectionTestController {
 
   getTestForJob = async (req: Request, res: Response) => {
     const jobId = req.params.jobId as string;
-    const result = await this.testService.getTestForJob(jobId);
+    const userId = res.locals.user?.id as string | undefined;
+    const result = await this.testService.getTestForJob(jobId, userId);
     res.status(200).send(result);
   };
 
