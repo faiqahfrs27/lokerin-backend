@@ -142,6 +142,7 @@ export class ApplicationService {
             company: { select: { id: true, name: true, city: true } },
           },
         },
+        interview: true,
       },
     });
     if (!application) throw new ApiError("Application not found", 404);

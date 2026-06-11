@@ -131,7 +131,9 @@ export class JobService {
         where,
         include: {
           category: { select: { id: true, name: true } },
-          company: { select: { id: true, name: true, city: true } },
+          company: {
+            select: { id: true, name: true, city: true, logoUrl: true },
+          },
           _count: { select: { applications: true } },
         },
         orderBy: { [sortBy]: sortOrder },
@@ -172,7 +174,9 @@ export class JobService {
       where: { id: jobId },
       include: {
         category: { select: { id: true, name: true } },
-        company: { select: { id: true, name: true, city: true } },
+        company: {
+          select: { id: true, name: true, city: true, logoUrl: true },
+        },
       },
     });
     if (!job || !job.isPublished) {
