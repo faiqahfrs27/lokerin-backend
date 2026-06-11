@@ -128,7 +128,7 @@ export class PreSelectionTestService {
     });
   };
 
-  getTestForJob = async (jobId: string) => {
+  getTestForJob = async (jobId: string, userId?: string) => {
     const test = await this.prisma.preSelectionTest.findUnique({
       where: { jobId },
       include: {
@@ -148,7 +148,23 @@ export class PreSelectionTestService {
     if (!test.job.isPublished) {
       throw new ApiError("Job is not published", 404);
     }
-    return test;
+
+    let myAttempt = null;
+    if (userId) {
+      myAttempt = await this.prisma.testAttempt.findFirst({
+        where: { userId, testId: test.id },
+        orderBy: { score: "desc" },
+        select: {
+          id: true,
+          score: true,
+          passed: true,
+          attemptedAt: true,
+        },
+        take: 1,
+      });
+    }
+
+    return { ...test, myAttempt };
   };
 
   updateTest = async (
