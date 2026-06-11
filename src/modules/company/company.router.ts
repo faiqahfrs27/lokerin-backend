@@ -20,6 +20,17 @@ export class CompanyRouter {
   }
 
   private initRoutes = () => {
+    // ─── PUBLIC ───────────────────────────────────────────────
+
+    // GET /api/companies
+    this.router.get("/", this.companyController.getPublicCompanies);
+
+    // GET /api/companies/:id
+    this.router.get("/:id", this.companyController.getPublicCompanyById);
+
+    // ─── ADMIN ────────────────────────────────────────────────
+
+    // GET /api/companies/me
     this.router.get(
       "/me",
       this.authMiddleware.verifyToken(),
@@ -27,6 +38,7 @@ export class CompanyRouter {
       this.companyController.getCompany,
     );
 
+    // PATCH /api/companies/me
     this.router.patch(
       "/me",
       this.authMiddleware.verifyToken(),
@@ -35,6 +47,7 @@ export class CompanyRouter {
       this.companyController.updateCompany,
     );
 
+    // PATCH /api/companies/me/logo
     this.router.patch(
       "/me/logo",
       this.authMiddleware.verifyToken(),
