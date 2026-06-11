@@ -80,6 +80,9 @@ import { SubscriptionService } from "./modules/subscriptions-payment/subscriptio
 import { SubscriptionController } from "./modules/subscriptions-payment/subscription.controller.js";
 import { SubscriptionRouter } from "./modules/subscriptions-payment/subscription.router.js";
 import { CronService } from "./modules/cron/cron.service.js";
+import { XenditService } from "./modules/xendit/xendit.service.js";
+import { XenditController } from "./modules/xendit/xendit.controller.js";
+import { XenditRouter } from "./modules/xendit/xendit.router.js";
 
 export class App {
   app: Express;
@@ -171,6 +174,9 @@ export class App {
       mailService,
     );
 
+    // xenditService
+    const xenditService = new XenditService(prisma);
+
     // cron jobs
     const cronService = new CronService(prisma, mailService);
     cronService.start();
@@ -246,6 +252,9 @@ export class App {
     const subscriptionController = new SubscriptionController(
       subscriptionService,
     );
+
+    // xenditController
+    const xenditController = new XenditController(xenditService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -354,10 +363,14 @@ export class App {
       uploadMiddleware,
     );
 
+    // xenditRouter
+    const xenditRouter = new XenditRouter(xenditController, authMiddleware);
+
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
     this.app.use("/api/subscriptions", subscriptionRouter.getRouter());
+    this.app.use("/api/xendit", xenditRouter.getRouter());
     this.app.use("/api/auth", authRouter.getRouter());
     this.app.use("/api/auth/profile", profileRouter.getRouter());
     this.app.use("/api/companies", companyRouter.getRouter());
