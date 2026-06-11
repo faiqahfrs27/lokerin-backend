@@ -141,6 +141,7 @@ model User {
   testAttempts        TestAttempt[]
   subscriptions       Subscription[]
   payments            Payment[]
+  cvProfile           CvProfile?
 
   @@index([email])
   @@map("users")
@@ -281,8 +282,8 @@ model Application {
   rejectionReason String?           @map("rejection_reason") @db.Text
   appliedAt       DateTime          @default(now()) @map("applied_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
   interview Interview?
 
   @@unique([userId, jobId])
@@ -451,4 +452,21 @@ model Interview {
 
   @@index([scheduledAt])
   @@map("interviews")
+}
+
+model CvProfile {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @map("user_id") @db.Uuid
+  summary          String?
+  phone            String?
+  portfolioUrl     String?  @map("portfolio_url")
+  experiences      Json     @default("[]")
+  educations       Json     @default("[]")
+  additionalSkills Json     @default("[]") @map("additional_skills")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cv_profiles")
 }

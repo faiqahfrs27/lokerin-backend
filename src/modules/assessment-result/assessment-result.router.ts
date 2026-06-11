@@ -22,6 +22,9 @@ export class AssessmentResultRouter {
     // GET /me
     this.router.get("/me", auth, this.assessmentResultController.getMyResults);
 
+    // GET /usage — check assessment usage for current subscription cycle
+    this.router.get("/usage", auth, this.assessmentResultController.getUsage);
+
     // POST /start/:assessmentId
     this.router.post(
       "/start/:assessmentId",

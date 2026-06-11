@@ -1,0 +1,236 @@
+import PDFDocument from "pdfkit";
+
+// Type definitions for CV data sections
+export interface CvExperience {
+  company: string;
+  position: string;
+  startYear: string;
+  endYear?: string;
+  description?: string;
+}
+
+export interface CvEducation {
+  institution: string;
+  degree: string;
+  major: string;
+  startYear: string;
+  endYear?: string;
+  gpa?: string;
+}
+
+export interface CvData {
+  fullName: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  portfolioUrl?: string;
+  summary?: string;
+  experiences: CvExperience[];
+  educations: CvEducation[];
+  additionalSkills: string[];
+  verifiedSkills: string[];
+}
+
+// Colors
+const C = {
+  brand: "#F97316",
+  black: "#1C1917",
+  gray: "#57534E",
+  lightGray: "#A8A29E",
+  divider: "#D6D3D1",
+};
+
+const FONT_BOLD = "Helvetica-Bold";
+const FONT_REGULAR = "Helvetica";
+const PAGE_MARGIN = 50;
+const CONTENT_WIDTH = 495;
+
+// Draw horizontal divider line
+const drawDivider = (doc: PDFKit.PDFDocument, y: number) => {
+  doc
+    .moveTo(PAGE_MARGIN, y)
+    .lineTo(PAGE_MARGIN + CONTENT_WIDTH, y)
+    .lineWidth(0.5)
+    .strokeColor(C.divider)
+    .stroke();
+};
+
+// Draw section header (e.g. "EXPERIENCE")
+const drawSectionHeader = (doc: PDFKit.PDFDocument, title: string) => {
+  doc.moveDown(0.5);
+  drawDivider(doc, doc.y);
+  doc.moveDown(0.5);
+  doc
+    .font(FONT_BOLD)
+    .fontSize(9)
+    .fillColor(C.brand)
+    .text(title.toUpperCase(), { characterSpacing: 1.5 });
+  doc.moveDown(0.3);
+};
+
+// Draw name + contact header
+const drawHeader = (doc: PDFKit.PDFDocument, data: CvData) => {
+  doc
+    .font(FONT_BOLD)
+    .fontSize(24)
+    .fillColor(C.black)
+    .text(data.fullName || "Your Name");
+
+  doc.moveDown(0.2);
+  doc.font(FONT_REGULAR).fontSize(10).fillColor(C.gray);
+
+  const contactParts = [data.email, data.phone, data.address].filter(Boolean);
+
+  doc.text(contactParts.join("  ·  "));
+
+  if (data.portfolioUrl) {
+    doc.moveDown(0.2);
+    doc
+      .font(FONT_REGULAR)
+      .fontSize(10)
+      .fillColor(C.brand)
+      .text(data.portfolioUrl);
+  }
+};
+
+// Draw summary section
+const drawSummary = (doc: PDFKit.PDFDocument, summary?: string) => {
+  if (!summary) return;
+  drawSectionHeader(doc, "Summary");
+  doc
+    .font(FONT_REGULAR)
+    .fontSize(10)
+    .fillColor(C.black)
+    .text(summary, { lineGap: 3 });
+};
+
+// Draw experience section
+const drawExperience = (
+  doc: PDFKit.PDFDocument,
+  experiences: CvExperience[],
+) => {
+  if (!experiences.length) return;
+  drawSectionHeader(doc, "Experience");
+
+  experiences.forEach((exp, i) => {
+    const period = exp.endYear
+      ? `${exp.startYear} – ${exp.endYear}`
+      : `${exp.startYear} – Present`;
+
+    doc.font(FONT_BOLD).fontSize(11).fillColor(C.black).text(exp.position);
+
+    doc
+      .font(FONT_REGULAR)
+      .fontSize(10)
+      .fillColor(C.gray)
+      .text(`${exp.company}  ·  ${period}`);
+
+    if (exp.description) {
+      doc.moveDown(0.2);
+      doc
+        .font(FONT_REGULAR)
+        .fontSize(10)
+        .fillColor(C.black)
+        .text(exp.description, { lineGap: 3 });
+    }
+
+    if (i < experiences.length - 1) doc.moveDown(0.6);
+  });
+};
+
+// Draw education section
+const drawEducation = (doc: PDFKit.PDFDocument, educations: CvEducation[]) => {
+  if (!educations.length) return;
+  drawSectionHeader(doc, "Education");
+
+  educations.forEach((edu, i) => {
+    const period = edu.endYear
+      ? `${edu.startYear} – ${edu.endYear}`
+      : `${edu.startYear} – Present`;
+
+    doc.font(FONT_BOLD).fontSize(11).fillColor(C.black).text(edu.institution);
+
+    const degreeText = edu.gpa
+      ? `${edu.degree} · ${edu.major}  ·  GPA ${edu.gpa}`
+      : `${edu.degree} · ${edu.major}`;
+
+    doc
+      .font(FONT_REGULAR)
+      .fontSize(10)
+      .fillColor(C.gray)
+      .text(`${degreeText}  ·  ${period}`);
+
+    if (i < educations.length - 1) doc.moveDown(0.6);
+  });
+};
+
+// Draw skills section (verified + additional)
+const drawSkills = (
+  doc: PDFKit.PDFDocument,
+  verifiedSkills: string[],
+  additionalSkills: string[],
+) => {
+  const allSkills = [...verifiedSkills, ...additionalSkills];
+  if (!allSkills.length) return;
+
+  drawSectionHeader(doc, "Skills");
+
+  if (verifiedSkills.length) {
+    doc
+      .font(FONT_BOLD)
+      .fontSize(9)
+      .fillColor(C.brand)
+      .text("Verified by Lokerin", { characterSpacing: 0.5 });
+    doc.moveDown(0.2);
+    doc
+      .font(FONT_REGULAR)
+      .fontSize(10)
+      .fillColor(C.black)
+      .text(verifiedSkills.join("  ·  "), { lineGap: 3 });
+    doc.moveDown(0.4);
+  }
+
+  if (additionalSkills.length) {
+    doc
+      .font(FONT_REGULAR)
+      .fontSize(10)
+      .fillColor(C.black)
+      .text(additionalSkills.join("  ·  "), { lineGap: 3 });
+  }
+};
+
+// Main function — build CV PDF buffer
+export const buildCvPdf = async (data: CvData): Promise<Buffer> => {
+  const doc = new PDFDocument({
+    size: "A4",
+    margin: PAGE_MARGIN,
+  });
+
+  const chunks: Buffer[] = [];
+  doc.on("data", (c) => chunks.push(c));
+
+  // Header
+  drawHeader(doc, data);
+
+  // Sections
+  drawSummary(doc, data.summary);
+  drawExperience(doc, data.experiences);
+  drawEducation(doc, data.educations);
+  drawSkills(doc, data.verifiedSkills, data.additionalSkills);
+
+  // Footer
+  doc.moveDown(1);
+  drawDivider(doc, doc.y);
+  doc.moveDown(0.3);
+  doc
+    .font(FONT_REGULAR)
+    .fontSize(8)
+    .fillColor(C.lightGray)
+    .text("Generated by Lokerin · lokerin.com", { align: "center" });
+
+  doc.end();
+
+  return await new Promise((resolve) => {
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+  });
+};

@@ -32,6 +32,13 @@ export class AssessmentResultController {
     res.status(200).send(result);
   };
 
+  // GET /api/assessment-results/usage
+  getUsage = async (req: Request, res: Response) => {
+    const userId = res.locals.user.id;
+    const result = await this.assessmentResultService.getUsage(userId);
+    res.status(200).send(result);
+  };
+
   // GET /api/assessment-results/:id
   getResultById = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
