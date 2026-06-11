@@ -8,4 +8,9 @@ export class JobCategoryController {
     const result = await this.jobCategoryService.getAll();
     res.status(200).send(result);
   };
+
+  create = async (req: Request, res: Response) => {
+    const result = await this.jobCategoryService.create(req.body);
+    res.status(201).send(result);
+  };
 }

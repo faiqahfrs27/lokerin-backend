@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { Role } from "../../../generated/prisma/enums.js";
 import { AuthMiddleware } from "../../middlewares/auth.middleware.js";
+import { ValidationMiddleware } from "../../middlewares/validation.middleware.js";
+import { CreateJobCategoryDTO } from "./dto/create-job-category.dto.js";
 import { JobCategoryController } from "./job-category.controller.js";
 
 export class JobCategoryRouter {
@@ -8,6 +10,7 @@ export class JobCategoryRouter {
 
   constructor(
     private jobCategoryController: JobCategoryController,
+    private validationMiddleware: ValidationMiddleware,
     private authMiddleware: AuthMiddleware,
   ) {
     this.router = Router();
@@ -20,6 +23,14 @@ export class JobCategoryRouter {
       this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin, Role.user]),
       this.jobCategoryController.getAll,
+    );
+
+    this.router.post(
+      "/",
+      this.authMiddleware.verifyToken(),
+      this.authMiddleware.verifyRole([Role.admin]),
+      this.validationMiddleware.validateBody(CreateJobCategoryDTO),
+      this.jobCategoryController.create,
     );
   };
 

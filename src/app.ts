@@ -294,6 +294,7 @@ export class App {
 
     const jobCategoryRouter = new JobCategoryRouter(
       jobCategoryController,
+      validationMiddleware,
       authMiddleware,
     );
 
