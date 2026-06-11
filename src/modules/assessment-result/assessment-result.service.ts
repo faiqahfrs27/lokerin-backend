@@ -1,12 +1,13 @@
 import { Prisma, PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
+import { syncCredentials } from "./credential.helper.js";
 
 type TxClient = Prisma.TransactionClient;
 
 export class AssessmentResultService {
   constructor(private prisma: PrismaClient) {}
 
-  // 1. START
+  // 1. START — begin new assessment attempt
   startAttempt = async (userId: string, assessmentId: string) => {
     const assessment = await this.prisma.skillAssessment.findFirst({
       where: { id: assessmentId, isPublished: true, deletedAt: null },
@@ -38,7 +39,7 @@ export class AssessmentResultService {
     };
   };
 
-  // 2. SUBMIT
+  // 2. SUBMIT — submit answers and calculate score
   submitAnswers = async (
     userId: string,
     resultId: string,
@@ -71,110 +72,7 @@ export class AssessmentResultService {
     );
   };
 
-  // Helper: count score
-  private calculateScore = async (
-    assessmentId: string,
-    answers: Record<string, number>,
-    passingScore: number,
-  ) => {
-    const questions = await this.prisma.assessmentQuestion.findMany({
-      where: { assessmentId, deletedAt: null },
-      select: { id: true, correctIndex: true },
-    });
-
-    let correctCount = 0;
-    for (const q of questions) {
-      if (answers[q.id] === q.correctIndex) correctCount++;
-    }
-
-    const score = Math.round((correctCount / questions.length) * 100);
-    const passed = score >= passingScore;
-    return { score, passed };
-  };
-
-  // Helper: finalize attempt + sync badge/cert (keep highest score)
-  private finalizeAttempt = async (
-    resultId: string,
-    userId: string,
-    assessmentId: string,
-    answers: Record<string, number>,
-    score: number,
-    passed: boolean,
-    wasOverTime: boolean,
-  ) => {
-    const finalPassed = passed && !wasOverTime;
-
-    return await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.assessmentResult.update({
-        where: { id: resultId },
-        data: { completedAt: new Date(), answers, score, passed: finalPassed },
-      });
-
-      if (finalPassed) {
-        // ===== BARU: ganti create langsung jadi syncCredentials =====
-        await this.syncCredentials(tx, userId, assessmentId, resultId, score);
-      }
-
-      return updated;
-    });
-  };
-
-  private syncCredentials = async (
-    tx: TxClient,
-    userId: string,
-    assessmentId: string,
-    resultId: string,
-    score: number,
-  ) => {
-    const existing = await tx.badgeEarned.findFirst({
-      where: { userId, assessmentId },
-      include: { result: { select: { score: true } } },
-    });
-
-    if (!existing) {
-      return await this.createCredentials(tx, userId, assessmentId, resultId);
-    }
-    if (score > (existing.result.score ?? 0)) {
-      await this.upgradeCredentials(
-        tx,
-        existing.id,
-        existing.assessmentResultId,
-        resultId,
-      );
-    }
-  };
-
-  private createCredentials = async (
-    tx: TxClient,
-    userId: string,
-    assessmentId: string,
-    resultId: string,
-  ) => {
-    await tx.badgeEarned.create({
-      data: { userId, assessmentResultId: resultId, assessmentId },
-    });
-    await tx.certificate.create({
-      data: { userId, assessmentResultId: resultId, assessmentId },
-    });
-  };
-
-  private upgradeCredentials = async (
-    tx: TxClient,
-    badgeId: string,
-    oldResultId: string,
-    newResultId: string,
-  ) => {
-    await tx.badgeEarned.update({
-      where: { id: badgeId },
-      data: { assessmentResultId: newResultId },
-    });
-    await tx.certificate.update({
-      where: { assessmentResultId: oldResultId },
-      data: { assessmentResultId: newResultId },
-    });
-  };
-
-  // 3. GET BY ID
+  // 3. GET BY ID — get single result with badge + cert
   getResultById = async (userId: string, resultId: string) => {
     const result = await this.prisma.assessmentResult.findFirst({
       where: { id: resultId, userId },
@@ -196,7 +94,7 @@ export class AssessmentResultService {
     return result;
   };
 
-  // 4. GET MY RESULTS — History attempt user
+  // 4. GET MY RESULTS — history of all attempts
   getMyResults = async (userId: string) => {
     return await this.prisma.assessmentResult.findMany({
       where: { userId },
@@ -215,7 +113,83 @@ export class AssessmentResultService {
     });
   };
 
-  // Helper: get results + check ownership
+  // 5. GET USAGE — check assessment usage for current subscription cycle
+  getUsage = async (userId: string) => {
+    const sub = await this.prisma.subscription.findFirst({
+      where: { userId, status: "active" },
+      include: { plan: { select: { name: true } } },
+    });
+
+    if (!sub) {
+      return { count: 0, limit: 0, canTake: false, reason: "no_subscription" };
+    }
+
+    const isPro = sub.plan.name.toLowerCase().includes("professional");
+    if (isPro) {
+      return { count: 0, limit: null, canTake: true, reason: "unlimited" };
+    }
+
+    const count = await this.prisma.assessmentResult.count({
+      where: {
+        userId,
+        createdAt: { gte: sub.startDate },
+        completedAt: { not: null },
+      },
+    });
+
+    const limit = 2;
+    const canTake = count < limit;
+    return { count, limit, canTake, reason: canTake ? "ok" : "limit_reached" };
+  };
+
+  // Helper: calculate score from answers
+  private calculateScore = async (
+    assessmentId: string,
+    answers: Record<string, number>,
+    passingScore: number,
+  ) => {
+    const questions = await this.prisma.assessmentQuestion.findMany({
+      where: { assessmentId, deletedAt: null },
+      select: { id: true, correctIndex: true },
+    });
+
+    let correctCount = 0;
+    for (const q of questions) {
+      if (answers[q.id] === q.correctIndex) correctCount++;
+    }
+
+    const score = Math.round((correctCount / questions.length) * 100);
+    const passed = score >= passingScore;
+    return { score, passed };
+  };
+
+  // Helper: finalize attempt + sync badge/cert
+  private finalizeAttempt = async (
+    resultId: string,
+    userId: string,
+    assessmentId: string,
+    answers: Record<string, number>,
+    score: number,
+    passed: boolean,
+    wasOverTime: boolean,
+  ) => {
+    const finalPassed = passed && !wasOverTime;
+
+    return await this.prisma.$transaction(async (tx: TxClient) => {
+      const updated = await tx.assessmentResult.update({
+        where: { id: resultId },
+        data: { completedAt: new Date(), answers, score, passed: finalPassed },
+      });
+
+      if (finalPassed) {
+        await syncCredentials(tx, userId, assessmentId, resultId, score);
+      }
+
+      return updated;
+    });
+  };
+
+  // Helper: get result and verify ownership
   private getResultOwned = async (userId: string, resultId: string) => {
     const result = await this.prisma.assessmentResult.findFirst({
       where: { id: resultId, userId },

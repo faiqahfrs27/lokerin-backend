@@ -83,6 +83,9 @@ import { CronService } from "./modules/cron/cron.service.js";
 import { XenditService } from "./modules/xendit/xendit.service.js";
 import { XenditController } from "./modules/xendit/xendit.controller.js";
 import { XenditRouter } from "./modules/xendit/xendit.router.js";
+import { CvService } from "./modules/cv/cv.service.js";
+import { CvController } from "./modules/cv/cv.controller.js";
+import { CvRouter } from "./modules/cv/cv.router.js";
 
 export class App {
   app: Express;
@@ -177,6 +180,9 @@ export class App {
     // xenditService
     const xenditService = new XenditService(prisma);
 
+    //cvService
+    const cvService = new CvService(prisma);
+
     // cron jobs
     const cronService = new CronService(prisma, mailService);
     cronService.start();
@@ -255,6 +261,9 @@ export class App {
 
     // xenditController
     const xenditController = new XenditController(xenditService);
+
+    //cvController
+    const cvController = new CvController(cvService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -366,6 +375,13 @@ export class App {
     // xenditRouter
     const xenditRouter = new XenditRouter(xenditController, authMiddleware);
 
+    // cvRouter
+    const cvRouter = new CvRouter(
+      cvController,
+      authMiddleware,
+      validationMiddleware,
+    );
+
     // entry point
     this.app.use("/samples", router.getRouter());
     this.app.use("/api/subscription-plans", subscriptionPlanRouter.getRouter());
@@ -385,6 +401,7 @@ export class App {
     this.app.use("/api/applications", applicationRouter.getRouter());
     this.app.use("/api/tests", preSelectionTestRouter.getRouter());
     this.app.use("/api/interviews", interviewRouter.getRouter());
+    this.app.use("/api/cv", cvRouter.getRouter());
   }
 
   private errorMiddleware() {
