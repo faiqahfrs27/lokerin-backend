@@ -8,15 +8,13 @@ export class CronService {
     private mailService: MailService,
   ) {}
 
-  // Start all cron jobs
   start = () => {
     this.scheduleExpiryReminder();
     this.scheduleAutoExpire();
-
+    this.scheduleInterviewReminder();
     console.log("Cron jobs started");
   };
 
-  // 00:00 every day — send H-1 reminder email
   private scheduleExpiryReminder = () => {
     cron.schedule("0 0 * * *", async () => {
       console.log("Running expiry reminder job...");
@@ -24,7 +22,6 @@ export class CronService {
     });
   };
 
-  // 00:05 every day — auto-expire subscriptions
   private scheduleAutoExpire = () => {
     cron.schedule("5 0 * * *", async () => {
       console.log("Running auto-expire job...");
@@ -32,12 +29,17 @@ export class CronService {
     });
   };
 
-  // Find subscriptions expiring tomorrow, send reminder email
+  private scheduleInterviewReminder = () => {
+    cron.schedule("30 0 * * *", async () => {
+      console.log("Running interview reminder job...");
+      await this.sendInterviewReminders();
+    });
+  };
+
   private sendExpiryReminders = async () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-
     const dayAfter = new Date(tomorrow);
     dayAfter.setDate(dayAfter.getDate() + 1);
 
@@ -77,14 +79,87 @@ export class CronService {
         })
         .catch(() => {});
     }
-
     console.log(`Expiry reminders sent: ${expiring.length}`);
   };
 
-  // Find expired subscriptions, update status to "expired"
+  private sendInterviewReminders = async () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const dayAfter = new Date(tomorrow);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+
+    const upcoming = await this.prisma.interview.findMany({
+      where: {
+        scheduledAt: { gte: tomorrow, lt: dayAfter },
+        reminderSent: false,
+      },
+      include: {
+        application: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                profile: { select: { fullName: true } },
+              },
+            },
+            job: {
+              select: {
+                title: true,
+                company: { select: { name: true, email: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    for (const itv of upcoming) {
+      await this.sendOneInterviewReminder(itv);
+      await this.prisma.interview.update({
+        where: { id: itv.id },
+        data: { reminderSent: true },
+      });
+    }
+    console.log(`Interview reminders sent: ${upcoming.length}`);
+  };
+
+  private sendOneInterviewReminder = async (itv: any) => {
+    const scheduledAt = itv.scheduledAt.toLocaleString("en-GB", {
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+    const ctx = {
+      jobTitle: itv.application.job.title,
+      companyName: itv.application.job.company.name,
+      scheduledAt,
+      location: itv.location ?? "",
+      notes: itv.notes ?? "",
+      applicationUrl: `${process.env.BASE_URL_FE}/applications/${itv.applicationId}`,
+    };
+    const userName = itv.application.user.profile?.fullName ?? "there";
+    await Promise.all([
+      this.mailService
+        .sendMail({
+          to: itv.application.user.email,
+          subject: `Reminder: Interview tomorrow - ${itv.application.job.title}`,
+          templateName: "transaction-interview-reminder",
+          context: { ...ctx, name: userName },
+        })
+        .catch(() => {}),
+      this.mailService
+        .sendMail({
+          to: itv.application.job.company.email,
+          subject: `Reminder: Interview tomorrow with ${userName}`,
+          templateName: "transaction-interview-reminder",
+          context: { ...ctx, name: itv.application.job.company.name },
+        })
+        .catch(() => {}),
+    ]);
+  };
+
   private expireSubscriptions = async () => {
     const now = new Date();
-
     const result = await this.prisma.subscription.updateMany({
       where: {
         status: "active",
@@ -92,7 +167,6 @@ export class CronService {
       },
       data: { status: "expired" },
     });
-
     console.log(`Auto-expired subscriptions: ${result.count}`);
   };
 }
