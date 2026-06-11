@@ -1,11 +1,16 @@
 import { Prisma, PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
+import { MailService } from "../mail/mail.service.js";
 import { CreateInterviewDTO } from "./dto/create-interview.dto.js";
 import { QueryInterviewDTO } from "./dto/query-interview.dto.js";
 import { UpdateInterviewDTO } from "./dto/update-interview.dto.js";
+import { sendInterviewScheduleEmails } from "./interview.notifier.js";
 
 export class InterviewService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(
+    private prisma: PrismaClient,
+    private mailService: MailService,
+  ) {}
 
   private getInterviewOrThrow = async (id: string, companyId: string) => {
     const interview = await this.prisma.interview.findUnique({
@@ -65,7 +70,7 @@ export class InterviewService {
 
     const scheduledAt = this.validateScheduledAt(body.scheduledAt);
 
-    return this.prisma.interview.create({
+    const created = await this.prisma.interview.create({
       data: {
         applicationId: body.applicationId,
         scheduledAt,
@@ -87,6 +92,12 @@ export class InterviewService {
         },
       },
     });
+    sendInterviewScheduleEmails(
+      this.prisma,
+      this.mailService,
+      created.id,
+    ).catch(() => {});
+    return created;
   };
 
   getInterviews = async (

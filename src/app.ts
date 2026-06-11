@@ -146,7 +146,7 @@ export class App {
     const preSelectionTestService = new PreSelectionTestService(prisma);
 
     //InterviewService
-    const interviewService = new InterviewService(prisma);
+    const interviewService = new InterviewService(prisma, mailService);
 
     //assessmentService
     const assessmentService = new AssessmentService(prisma);
