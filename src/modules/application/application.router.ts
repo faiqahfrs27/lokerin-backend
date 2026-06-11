@@ -23,6 +23,7 @@ export class ApplicationRouter {
       "/",
       this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.user]),
+      this.authMiddleware.verifyEmailVerified(),
       this.validationMiddleware.validateBody(CreateApplicationDTO),
       this.controller.createApplication,
     );

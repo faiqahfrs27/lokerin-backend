@@ -35,16 +35,21 @@ export class VerifyEmailService {
       throw new ApiError("Email is already verified", 400);
     }
 
-    await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id: verification.userId },
-        data: { isVerified: true },
-      }),
-      this.prisma.verification.update({
-        where: { id: verification.id },
-        data: { used: true },
-      }),
-    ]);
+    await this.prisma.$transaction(
+      async (tx) => {
+        await tx.user.update({
+          where: { id: verification.userId },
+          data: { isVerified: true },
+        });
+        await tx.verification.update({
+          where: { id: verification.id },
+          data: { used: true },
+        });
+      },
+      {
+        timeout: 10000,
+      },
+    );
 
     return {
       email: verification.user.email,
