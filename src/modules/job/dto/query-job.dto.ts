@@ -1,6 +1,7 @@
 import { Type } from "class-transformer";
 import {
   IsBooleanString,
+  IsDateString,
   IsIn,
   IsInt,
   IsOptional,
@@ -47,4 +48,12 @@ export class QueryJobDTO {
   @IsOptional()
   @IsIn(["asc", "desc"])
   sortOrder?: "asc" | "desc" = "desc";
+
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string;
 }

@@ -125,6 +125,17 @@ export class JobService {
     if (query.city) {
       where.city = { contains: query.city, mode: "insensitive" };
     }
+    if (query.dateFrom && query.dateTo) {
+      if (new Date(query.dateFrom) > new Date(query.dateTo)) {
+        throw new ApiError("dateFrom must be before dateTo", 400);
+      }
+    }
+    if (query.dateFrom || query.dateTo) {
+      where.createdAt = {
+        ...(query.dateFrom && { gte: new Date(query.dateFrom) }),
+        ...(query.dateTo && { lte: new Date(query.dateTo) }),
+      };
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.job.findMany({
