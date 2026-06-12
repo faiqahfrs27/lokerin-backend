@@ -86,6 +86,9 @@ import { XenditRouter } from "./modules/xendit/xendit.router.js";
 import { CvService } from "./modules/cv/cv.service.js";
 import { CvController } from "./modules/cv/cv.controller.js";
 import { CvRouter } from "./modules/cv/cv.router.js";
+import { AnalyticsService } from "./modules/analytics/analytics.service.js";
+import { AnalyticsController } from "./modules/analytics/analytics.controller.js";
+import { AnalyticsRouter } from "./modules/analytics/analytics.router.js";
 
 export class App {
   app: Express;
@@ -229,6 +232,9 @@ export class App {
     //interviewController
     const interviewController = new InterviewController(interviewService);
 
+    //analyticsService
+    const analyticsService = new AnalyticsService(prisma);
+
     //assessmentController
     const assessmentController = new AssessmentController(assessmentService);
 
@@ -258,6 +264,9 @@ export class App {
     const subscriptionController = new SubscriptionController(
       subscriptionService,
     );
+
+    //analyticsController
+    const analyticsController = new AnalyticsController(analyticsService);
 
     // xenditController
     const xenditController = new XenditController(xenditService);
@@ -307,6 +316,11 @@ export class App {
     const jobRouter = new JobRouter(
       jobController,
       validationMiddleware,
+      authMiddleware,
+    );
+
+    const analyticsRouter = new AnalyticsRouter(
+      analyticsController,
       authMiddleware,
     );
 
@@ -402,6 +416,7 @@ export class App {
     this.app.use("/api/tests", preSelectionTestRouter.getRouter());
     this.app.use("/api/interviews", interviewRouter.getRouter());
     this.app.use("/api/cv", cvRouter.getRouter());
+    this.app.use("/api/analytics", analyticsRouter.getRouter());
   }
 
   private errorMiddleware() {
