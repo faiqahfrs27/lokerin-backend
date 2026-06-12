@@ -189,6 +189,7 @@ export class ApplicantService {
         job: {
           select: { id: true, title: true, city: true, hasTest: true },
         },
+        interview: true,
       },
     });
     if (!application) return null;
