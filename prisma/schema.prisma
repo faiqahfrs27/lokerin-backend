@@ -394,6 +394,7 @@ model PreSelectionTest {
   description     String?  @db.Text
   passingScore    Int      @default(75) @map("passing_score")
   durationMinutes Int      @default(30) @map("duration_minutes")
+  allowRetake     Boolean  @default(true) @map("allow_retake")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
