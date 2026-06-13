@@ -75,6 +75,7 @@ export class PreSelectionTestService {
           description: body.description,
           passingScore: body.passingScore,
           durationMinutes: body.durationMinutes,
+          allowRetake: body.allowRetake ?? true,
         },
       });
       await tx.job.update({
@@ -181,6 +182,10 @@ export class PreSelectionTestService {
         description: body.description,
         passingScore: body.passingScore,
         durationMinutes: body.durationMinutes,
+
+        ...(body.allowRetake !== undefined && {
+          allowRetake: body.allowRetake,
+        }),
       },
     });
   };
@@ -273,6 +278,18 @@ export class PreSelectionTestService {
     if (!test) throw new ApiError("Test not found", 404);
     if (test.questions.length === 0) {
       throw new ApiError("This test has no questions", 400);
+    }
+
+    if (!test.allowRetake) {
+      const existingAttempt = await this.prisma.testAttempt.findFirst({
+        where: { userId, testId: test.id },
+      });
+      if (existingAttempt) {
+        throw new ApiError(
+          "This test does not allow retake. Your previous attempt is final.",
+          400,
+        );
+      }
     }
 
     const correctCount = this.gradeAttempt(test.questions, body.answers);

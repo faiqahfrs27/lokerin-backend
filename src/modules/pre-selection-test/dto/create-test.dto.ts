@@ -1,4 +1,12 @@
-import { IsString, IsUUID, IsOptional, IsInt, Min, Max } from "class-validator";
+import {
+  IsBoolean,
+  IsString,
+  IsUUID,
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+} from "class-validator";
 import { Type } from "class-transformer";
 
 export class CreateTestDTO {
@@ -25,4 +33,8 @@ export class CreateTestDTO {
   @Min(1)
   @Max(180)
   durationMinutes?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  allowRetake?: boolean;
 }

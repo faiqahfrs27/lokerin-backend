@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsInt, Min, Max } from "class-validator";
+import {
+  IsBoolean,
+  IsString,
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+} from "class-validator";
 import { Type } from "class-transformer";
 
 export class UpdateTestDTO {
@@ -23,4 +30,8 @@ export class UpdateTestDTO {
   @Min(1)
   @Max(180)
   durationMinutes?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  allowRetake?: boolean;
 }
