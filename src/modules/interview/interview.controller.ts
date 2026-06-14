@@ -49,4 +49,10 @@ export class InterviewController {
     const result = await this.interviewService.deleteInterview(id, companyId);
     res.status(200).send(result);
   };
+
+  getMyInterviews = async (req: Request, res: Response) => {
+    const userId = res.locals.user?.id;
+    const result = await this.interviewService.getInterviewsByUser(userId);
+    res.status(200).send(result);
+  };
 }

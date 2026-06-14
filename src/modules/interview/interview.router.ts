@@ -37,6 +37,12 @@ export class InterviewRouter {
     );
 
     this.router.get(
+      "/me",
+      this.authMiddleware.verifyToken(),
+      this.interviewController.getMyInterviews,
+    );
+
+    this.router.get(
       "/:id",
       this.authMiddleware.verifyToken(),
       this.authMiddleware.verifyRole([Role.admin]),

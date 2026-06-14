@@ -199,4 +199,30 @@ export class InterviewService {
     await this.prisma.interview.delete({ where: { id } });
     return { ok: true };
   };
+
+  getInterviewsByUser = async (userId: string) => {
+    const interviews = await this.prisma.interview.findMany({
+      where: { application: { userId } },
+      include: {
+        application: {
+          select: {
+            id: true,
+            status: true,
+            job: {
+              select: {
+                id: true,
+                title: true,
+                city: true,
+                company: {
+                  select: { id: true, name: true, logoUrl: true },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { scheduledAt: "asc" },
+    });
+    return { data: interviews };
+  };
 }
