@@ -128,6 +128,12 @@ export class JobService {
     if (query.city) {
       where.city = { contains: query.city, mode: "insensitive" };
     }
+    if (query.companyId) {
+      where.companyId = query.companyId;
+    }
+    if (query.excludeJobId) {
+      where.id = { not: query.excludeJobId };
+    }
     if (query.dateFrom && query.dateTo) {
       if (new Date(query.dateFrom) > new Date(query.dateTo)) {
         throw new ApiError("dateFrom must be before dateTo", 400);
