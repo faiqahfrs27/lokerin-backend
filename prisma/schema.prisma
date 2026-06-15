@@ -246,6 +246,7 @@ model Job {
   isPublished Boolean   @default(false) @map("is_published")
   hasTest     Boolean   @default(false) @map("has_test")
   createdAt   DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
 
   company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category         JobCategory       @relation(fields: [categoryId], references: [id])
