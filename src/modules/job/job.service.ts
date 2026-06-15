@@ -15,7 +15,7 @@ export class JobService {
       where: { id: jobId },
     });
 
-    if (!job) {
+    if (!job || job.deletedAt) {
       throw new ApiError("Job not found", 404);
     }
 
@@ -68,7 +68,7 @@ export class JobService {
     const sortBy = query.sortBy ?? "createdAt";
     const sortOrder = query.sortOrder ?? "desc";
 
-    const where: Prisma.JobWhereInput = { companyId };
+    const where: Prisma.JobWhereInput = { companyId, deletedAt: null };
 
     if (query.search) {
       where.title = { contains: query.search, mode: "insensitive" };
@@ -114,7 +114,10 @@ export class JobService {
     const sortBy = query.sortBy ?? "createdAt";
     const sortOrder = query.sortOrder ?? "desc";
 
-    const where: Prisma.JobWhereInput = { isPublished: true };
+    const where: Prisma.JobWhereInput = {
+      isPublished: true,
+      deletedAt: null,
+    };
 
     if (query.search) {
       where.title = { contains: query.search, mode: "insensitive" };
@@ -174,7 +177,7 @@ export class JobService {
       where: { id: jobId },
       include: { category: { select: { id: true, name: true } } },
     });
-    if (!job) throw new ApiError("Job not found", 404);
+    if (!job || job.deletedAt) throw new ApiError("Job not found", 404);
     if (job.companyId !== companyId)
       throw new ApiError("You don't have access to this job", 403);
     return job;
@@ -190,7 +193,7 @@ export class JobService {
         },
       },
     });
-    if (!job || !job.isPublished) {
+    if (!job || job.deletedAt || !job.isPublished) {
       throw new ApiError("Job not found", 404);
     }
     return job;
@@ -244,7 +247,10 @@ export class JobService {
     }
     await this.getJobOrThrow(jobId, companyId);
 
-    await this.prisma.job.delete({ where: { id: jobId } });
+    await this.prisma.job.update({
+      where: { id: jobId },
+      data: { deletedAt: new Date() },
+    });
 
     return { message: "Job deleted successfully" };
   };
