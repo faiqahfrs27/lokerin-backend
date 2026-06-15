@@ -34,6 +34,10 @@ export class QueryJobDTO {
   categoryId?: string;
 
   @IsOptional()
+  @IsUUID()
+  companyId?: string;
+
+  @IsOptional()
   @IsString()
   city?: string;
 
@@ -56,4 +60,8 @@ export class QueryJobDTO {
   @IsOptional()
   @IsDateString()
   dateTo?: string;
+
+  @IsOptional()
+  @IsUUID()
+  excludeJobId?: string;
 }
