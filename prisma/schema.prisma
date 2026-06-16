@@ -142,6 +142,7 @@ model User {
   subscriptions       Subscription[]
   payments            Payment[]
   cvProfile           CvProfile?
+  companyReviews      CompanyReview[]
 
   @@index([email])
   @@map("users")
@@ -217,8 +218,9 @@ model Company {
   latitude       Decimal? @db.Decimal(10, 7)
   longitude      Decimal? @db.Decimal(10, 7)
 
-  admin User? @relation
-  jobs  Job[]
+  admin   User?           @relation
+  jobs    Job[]
+  reviews CompanyReview[]
 
   @@map("companies")
 }
@@ -471,4 +473,25 @@ model CvProfile {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("cv_profiles")
+}
+
+model CompanyReview {
+  id             String   @id @default(uuid()) @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  position       String
+  salaryEstimate Int?     @map("salary_estimate")
+  content        String   @db.Text
+  cultureRating  Int      @map("culture_rating")
+  worklifeRating Int      @map("worklife_rating")
+  facilityRating Int      @map("facility_rating")
+  careerRating   Int      @map("career_rating")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([companyId])
+  @@map("company_reviews")
 }

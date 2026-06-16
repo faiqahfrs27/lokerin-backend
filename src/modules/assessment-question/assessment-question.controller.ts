@@ -6,7 +6,7 @@ export class AssessmentQuestionController {
 
   addQuestion = async (req: Request, res: Response) => {
     const result = await this.assessmentQuestionService.addQuestion(
-      req.params.id,
+      req.params.id as string,
       req.body,
     );
     res.status(201).send(result);
@@ -14,14 +14,16 @@ export class AssessmentQuestionController {
 
   updateQuestion = async (req: Request, res: Response) => {
     const result = await this.assessmentQuestionService.updateQuestion(
-      req.params.questionId,
+      req.params.questionId as string,
       req.body,
     );
     res.status(200).send(result);
   };
 
   deleteQuestion = async (req: Request, res: Response) => {
-    await this.assessmentQuestionService.deleteQuestion(req.params.questionId);
+    await this.assessmentQuestionService.deleteQuestion(
+      req.params.questionId as string,
+    );
     res.status(200).send({ message: "Question deleted" });
   };
 }

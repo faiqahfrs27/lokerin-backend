@@ -89,6 +89,9 @@ import { CvRouter } from "./modules/cv/cv.router.js";
 import { AnalyticsService } from "./modules/analytics/analytics.service.js";
 import { AnalyticsController } from "./modules/analytics/analytics.controller.js";
 import { AnalyticsRouter } from "./modules/analytics/analytics.router.js";
+import { CompanyReviewService } from "./modules/company-review/company-review.service.js";
+import { CompanyReviewController } from "./modules/company-review/company-review.controller.js";
+import { CompanyReviewRouter } from "./modules/company-review/company-review.router.js";
 
 export class App {
   app: Express;
@@ -180,6 +183,9 @@ export class App {
       mailService,
     );
 
+    // companyReviewService
+    const companyReviewService = new CompanyReviewService(prisma);
+
     // xenditService
     const xenditService = new XenditService(prisma);
 
@@ -267,6 +273,11 @@ export class App {
 
     //analyticsController
     const analyticsController = new AnalyticsController(analyticsService);
+
+    // companyReviewController
+    const companyReviewController = new CompanyReviewController(
+      companyReviewService,
+    );
 
     // xenditController
     const xenditController = new XenditController(xenditService);
@@ -386,6 +397,12 @@ export class App {
       uploadMiddleware,
     );
 
+    const companyReviewRouter = new CompanyReviewRouter(
+      companyReviewController,
+      authMiddleware,
+      validationMiddleware,
+    );
+
     // xenditRouter
     const xenditRouter = new XenditRouter(xenditController, authMiddleware);
 
@@ -417,6 +434,7 @@ export class App {
     this.app.use("/api/interviews", interviewRouter.getRouter());
     this.app.use("/api/cv", cvRouter.getRouter());
     this.app.use("/api/analytics", analyticsRouter.getRouter());
+    this.app.use("/api/company-reviews", companyReviewRouter.getRouter());
   }
 
   private errorMiddleware() {

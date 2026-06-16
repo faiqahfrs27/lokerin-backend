@@ -9,7 +9,7 @@ export class AssessmentResultController {
     const userId = res.locals.user.id;
     const result = await this.assessmentResultService.startAttempt(
       userId,
-      req.params.assessmentId,
+      req.params.assessmentId as string,
     );
     res.status(201).send(result);
   };
@@ -19,7 +19,7 @@ export class AssessmentResultController {
     const userId = res.locals.user.id;
     const result = await this.assessmentResultService.submitAnswers(
       userId,
-      req.params.id,
+      req.params.id as string,
       req.body.answers,
     );
     res.status(200).send(result);
@@ -44,7 +44,7 @@ export class AssessmentResultController {
     const userId = res.locals.user.id;
     const result = await this.assessmentResultService.getResultById(
       userId,
-      req.params.id,
+      req.params.id as string,
     );
     res.status(200).send(result);
   };
