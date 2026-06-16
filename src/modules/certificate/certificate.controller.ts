@@ -13,7 +13,9 @@ export class CertificateController {
 
   // GET /api/certificates/verify/:code (public)
   verifyByCode = async (req: Request, res: Response) => {
-    const result = await this.certificateService.verifyByCode(req.params.code);
+    const result = await this.certificateService.verifyByCode(
+      req.params.code as string,
+    );
     res.status(200).send(result);
   };
 
@@ -22,7 +24,7 @@ export class CertificateController {
     const userId = res.locals.user.id;
     const pdf = await this.certificateService.generatePdf(
       userId,
-      req.params.id,
+      req.params.id as string,
     );
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

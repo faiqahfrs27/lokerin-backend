@@ -34,7 +34,7 @@ export class SubscriptionController {
   approvePayment = async (req: Request, res: Response) => {
     const devId = res.locals.user.id;
     const result = await this.subscriptionService.approvePayment(
-      req.params.id,
+      req.params.id as string,
       devId,
     );
     res.status(200).send(result);
@@ -42,7 +42,9 @@ export class SubscriptionController {
 
   // DEV: reject a payment
   rejectPayment = async (req: Request, res: Response) => {
-    const result = await this.subscriptionService.rejectPayment(req.params.id);
+    const result = await this.subscriptionService.rejectPayment(
+      req.params.id as string,
+    );
     res.status(200).send(result);
   };
 }

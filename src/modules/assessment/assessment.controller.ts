@@ -20,7 +20,7 @@ export class AssessmentController {
 
   getAssessmentById = async (req: Request, res: Response) => {
     const result = await this.assessmentService.getAssessmentById(
-      req.params.id,
+      req.params.id as string,
     );
     res.status(200).send(result);
   };
@@ -32,27 +32,27 @@ export class AssessmentController {
 
   updateAssessment = async (req: Request, res: Response) => {
     const result = await this.assessmentService.updateAssessment(
-      req.params.id,
+      req.params.id as string,
       req.body,
     );
     res.status(200).send(result);
   };
 
   deleteAssessment = async (req: Request, res: Response) => {
-    await this.assessmentService.deleteAssessment(req.params.id);
+    await this.assessmentService.deleteAssessment(req.params.id as string);
     res.status(200).send({ message: "Assessment deleted" });
   };
 
   publishAssessment = async (req: Request, res: Response) => {
     const result = await this.assessmentService.publishAssessment(
-      req.params.id,
+      req.params.id as string,
     );
     res.status(200).send(result);
   };
 
   unpublishAssessment = async (req: Request, res: Response) => {
     const result = await this.assessmentService.unpublishAssessment(
-      req.params.id,
+      req.params.id as string,
     );
     res.status(200).send(result);
   };
