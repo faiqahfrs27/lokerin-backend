@@ -2,9 +2,14 @@ import { Prisma, PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { QueryApplicantDTO } from "./dto/query-applicant.dto.js";
 import { UpdateApplicantStatusDTO } from "./dto/update-applicant-status.dto.js";
+import { PrioritySortHelper } from "../subscriptions-payment/priority-sort.helper.js";
 
 export class ApplicantService {
-  constructor(private prisma: PrismaClient) {}
+  private prioritySortHelper: PrioritySortHelper;
+
+  constructor(private prisma: PrismaClient) {
+    this.prioritySortHelper = new PrioritySortHelper(prisma);
+  }
 
   private getApplicationOrThrow = async (
     applicationId: string,
@@ -168,8 +173,11 @@ export class ApplicantService {
       testAttempt: attemptsMap.get(`${a.userId}-${a.jobId}`) ?? null,
     }));
 
+    const prioritized =
+      await this.prioritySortHelper.applyPriorityOrder(enriched);
+
     return {
-      data: enriched,
+      data: prioritized,
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   };
