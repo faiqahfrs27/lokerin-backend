@@ -92,6 +92,9 @@ import { AnalyticsRouter } from "./modules/analytics/analytics.router.js";
 import { CompanyReviewService } from "./modules/company-review/company-review.service.js";
 import { CompanyReviewController } from "./modules/company-review/company-review.controller.js";
 import { CompanyReviewRouter } from "./modules/company-review/company-review.router.js";
+import { SavedJobsService } from "./modules/saved-jobs/saved-jobs.service.js";
+import { SavedJobsController } from "./modules/saved-jobs/saved-jobs.controller.js";
+import { SavedJobsRouter } from "./modules/saved-jobs/saved-jobs.router.js";
 
 export class App {
   app: Express;
@@ -147,6 +150,9 @@ export class App {
 
     //jobService
     const jobService = new JobService(prisma);
+
+    //savedJobsService
+    const savedJobsService = new SavedJobsService(prisma);
 
     //jobCategoryService
     const jobCategoryService = new JobCategoryService(prisma);
@@ -226,6 +232,9 @@ export class App {
 
     //jobController
     const jobController = new JobController(jobService);
+
+    //savedJobsController
+    const savedJobsController = new SavedJobsController(savedJobsService);
 
     //jobCategoryController
     const jobCategoryController = new JobCategoryController(jobCategoryService);
@@ -330,6 +339,11 @@ export class App {
       authMiddleware,
     );
 
+    const savedJobsRouter = new SavedJobsRouter(
+      savedJobsController,
+      authMiddleware,
+    );
+
     const analyticsRouter = new AnalyticsRouter(
       analyticsController,
       authMiddleware,
@@ -422,6 +436,7 @@ export class App {
     this.app.use("/api/auth/profile", profileRouter.getRouter());
     this.app.use("/api/companies", companyRouter.getRouter());
     this.app.use("/api/jobs", jobRouter.getRouter());
+    this.app.use("/api/saved-jobs", savedJobsRouter.getRouter());
     this.app.use("/api/job-categories", jobCategoryRouter.getRouter());
     this.app.use("/api/assessments", assessmentRouter.getRouter());
     this.app.use("/api/assessments", assessmentQuestionRouter.getRouter());
