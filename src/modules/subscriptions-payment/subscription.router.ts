@@ -53,6 +53,18 @@ export class SubscriptionRouter {
       devOnly,
       this.subscriptionController.rejectPayment,
     );
+    this.router.get(
+      "/subscribers",
+      auth,
+      devOnly,
+      this.subscriptionController.getSubscribers,
+    );
+    this.router.get(
+      "/subscribers/stats",
+      auth,
+      devOnly,
+      this.subscriptionController.getSubscriberStats,
+    );
   };
 
   getRouter = () => {

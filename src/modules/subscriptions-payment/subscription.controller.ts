@@ -47,4 +47,16 @@ export class SubscriptionController {
     );
     res.status(200).send(result);
   };
+
+  // DEV: list all subscribers with payment history
+  getSubscribers = async (req: Request, res: Response) => {
+    const result = await this.subscriptionService.getSubscribers();
+    res.status(200).send(result);
+  };
+
+  // DEV: get subscriber stats for dashboard
+  getSubscriberStats = async (req: Request, res: Response) => {
+    const result = await this.subscriptionService.getSubscriberStats();
+    res.status(200).send(result);
+  };
 }
