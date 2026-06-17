@@ -1,16 +1,21 @@
 import { PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { CloudinaryService } from "../cloudinary/cloudinary.service.js";
-import { MailService } from "../mail/mail.service.js"; // ← TAMBAH
+import { MailService } from "../mail/mail.service.js";
+import { SubscribersHelper } from "./subscribers.helper.js";
 
 const SUBSCRIPTION_DAYS = 30;
 
 export class SubscriptionService {
+  private subscribersHelper: SubscribersHelper;
+
   constructor(
     private prisma: PrismaClient,
     private cloudinaryService: CloudinaryService,
     private mailService: MailService,
-  ) {}
+  ) {
+    this.subscribersHelper = new SubscribersHelper(prisma);
+  }
 
   // USER: subscribe to a plan + upload payment proof
   subscribe = async (
@@ -89,6 +94,16 @@ export class SubscriptionService {
         subscription: { select: { plan: { select: { name: true } } } },
       },
     });
+  };
+
+  // DEV: list all subscribers with payment history
+  getSubscribers = async () => {
+    return await this.subscribersHelper.getSubscribers();
+  };
+
+  // DEV: get subscriber stats for dashboard
+  getSubscriberStats = async () => {
+    return await this.subscribersHelper.getSubscriberStats();
   };
 
   // DEV: approve payment, then activate subscription for 30 days
