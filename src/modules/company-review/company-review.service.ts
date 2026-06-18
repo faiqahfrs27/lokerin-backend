@@ -60,26 +60,36 @@ export class CompanyReviewService {
     });
   };
 
-  // Get all reviews for a company (anonymous)
-  getReviews = async (companyId: string) => {
-    const reviews = await this.prisma.companyReview.findMany({
-      where: { companyId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        position: true,
-        salaryEstimate: true,
-        content: true,
-        cultureRating: true,
-        worklifeRating: true,
-        facilityRating: true,
-        careerRating: true,
-        createdAt: true,
-        // userId NOT included — anonymous
-      },
-    });
+  // Get all reviews for a company (anonymous, paginated)
+  getReviews = async (
+    companyId: string,
+    query: { page?: number; limit?: number },
+  ) => {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
 
-    return reviews.map((r) => ({
+    const [reviews, total] = await Promise.all([
+      this.prisma.companyReview.findMany({
+        where: { companyId },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        select: {
+          id: true,
+          position: true,
+          salaryEstimate: true,
+          content: true,
+          cultureRating: true,
+          worklifeRating: true,
+          facilityRating: true,
+          careerRating: true,
+          createdAt: true,
+        },
+      }),
+      this.prisma.companyReview.count({ where: { companyId } }),
+    ]);
+
+    const data = reviews.map((r) => ({
       ...r,
       overallRating: Math.round(
         (r.cultureRating +
@@ -89,6 +99,16 @@ export class CompanyReviewService {
           4,
       ),
     }));
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   };
 
   // Check if current user has already reviewed this company

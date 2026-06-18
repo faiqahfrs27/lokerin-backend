@@ -3,6 +3,7 @@ import { AuthMiddleware } from "../../middlewares/auth.middleware.js";
 import { ValidationMiddleware } from "../../middlewares/validation.middleware.js";
 import { CompanyReviewController } from "./company-review.controller.js";
 import { CreateReviewDTO } from "./dto/create-review.dto.js";
+import { QueryReviewDTO } from "./dto/query-review.dto.js";
 
 export class CompanyReviewRouter {
   private router: Router;
@@ -20,7 +21,11 @@ export class CompanyReviewRouter {
     const auth = this.authMiddleware.verifyToken();
 
     // PUBLIC: get all reviews for a company
-    this.router.get("/:companyId", this.companyReviewController.getReviews);
+    this.router.get(
+      "/:companyId",
+      this.validationMiddleware.validateQuery(QueryReviewDTO),
+      this.companyReviewController.getReviews,
+    );
 
     // AUTH: check eligibility to review
     this.router.get(
