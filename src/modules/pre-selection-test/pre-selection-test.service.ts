@@ -15,7 +15,7 @@ export class PreSelectionTestService {
       where: { id: testId },
       include: { job: { select: { companyId: true } } },
     });
-    if (!test) throw new ApiError("Test not found", 404);
+    if (!test || test.deletedAt) throw new ApiError("Test not found", 404);
     if (test.job.companyId !== companyId) {
       throw new ApiError("You don't have access to this test", 403);
     }
@@ -30,7 +30,9 @@ export class PreSelectionTestService {
       where: { id: questionId },
       include: { test: { include: { job: { select: { companyId: true } } } } },
     });
-    if (!question) throw new ApiError("Question not found", 404);
+    if (!question || question.deletedAt) {
+      throw new ApiError("Question not found", 404);
+    }
     if (question.test.job.companyId !== companyId) {
       throw new ApiError("You don't have access to this question", 403);
     }
@@ -40,15 +42,25 @@ export class PreSelectionTestService {
   private validateJobForTest = async (jobId: string, companyId: string) => {
     const job = await this.prisma.job.findUnique({
       where: { id: jobId },
-      include: { preSelectionTest: true },
+      select: { id: true, companyId: true },
     });
     if (!job) throw new ApiError("Job not found", 404);
     if (job.companyId !== companyId) {
       throw new ApiError("You don't have access to this job", 403);
     }
-    if (job.preSelectionTest) {
+
+    // Check active test (non-deleted)
+    const activeTest = await this.prisma.preSelectionTest.findFirst({
+      where: { jobId, deletedAt: null },
+    });
+    if (activeTest) {
       throw new ApiError("This job already has a test", 409);
     }
+
+    // Cleanup soft-deleted test to free unique constraint
+    await this.prisma.preSelectionTest.deleteMany({
+      where: { jobId, deletedAt: { not: null } },
+    });
   };
 
   private gradeAttempt = (
@@ -91,7 +103,10 @@ export class PreSelectionTestService {
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 10);
 
-    const where: Prisma.PreSelectionTestWhereInput = { job: { companyId } };
+    const where: Prisma.PreSelectionTestWhereInput = {
+      job: { companyId },
+      deletedAt: null,
+    };
     if (query.search) {
       where.title = { contains: query.search, mode: "insensitive" };
     }
@@ -123,18 +138,19 @@ export class PreSelectionTestService {
       where: { id: testId },
       include: {
         job: { select: { id: true, title: true } },
-        questions: { orderBy: { order: "asc" } },
+        questions: { where: { deletedAt: null }, orderBy: { order: "asc" } },
         _count: { select: { attempts: true } },
       },
     });
   };
 
   getTestForJob = async (jobId: string, userId?: string) => {
-    const test = await this.prisma.preSelectionTest.findUnique({
-      where: { jobId },
+    const test = await this.prisma.preSelectionTest.findFirst({
+      where: { jobId, deletedAt: null },
       include: {
         job: { select: { id: true, title: true, isPublished: true } },
         questions: {
+          where: { deletedAt: null },
           orderBy: { order: "asc" },
           select: {
             id: true,
@@ -182,7 +198,6 @@ export class PreSelectionTestService {
         description: body.description,
         passingScore: body.passingScore,
         durationMinutes: body.durationMinutes,
-
         ...(body.allowRetake !== undefined && {
           allowRetake: body.allowRetake,
         }),
@@ -194,8 +209,19 @@ export class PreSelectionTestService {
     if (!companyId) throw new ApiError("Not linked to a company", 403);
     const test = await this.assertTestOwnership(testId, companyId);
 
+    const now = new Date();
     await this.prisma.$transaction(async (tx) => {
-      await tx.preSelectionTest.delete({ where: { id: testId } });
+      // Soft delete test
+      await tx.preSelectionTest.update({
+        where: { id: testId },
+        data: { deletedAt: now },
+      });
+      // Cascade soft delete questions
+      await tx.testQuestion.updateMany({
+        where: { testId, deletedAt: null },
+        data: { deletedAt: now },
+      });
+      // Update job hasTest flag
       await tx.job.update({
         where: { id: test.jobId },
         data: { hasTest: false },
@@ -260,7 +286,10 @@ export class PreSelectionTestService {
   ) => {
     if (!companyId) throw new ApiError("Not linked to a company", 403);
     await this.assertQuestionOwnership(questionId, companyId);
-    await this.prisma.testQuestion.delete({ where: { id: questionId } });
+    await this.prisma.testQuestion.update({
+      where: { id: questionId },
+      data: { deletedAt: new Date() },
+    });
     return { message: "Question deleted successfully" };
   };
 
@@ -271,9 +300,14 @@ export class PreSelectionTestService {
   ) => {
     if (!userId) throw new ApiError("Not authenticated", 401);
 
-    const test = await this.prisma.preSelectionTest.findUnique({
-      where: { id: testId },
-      include: { questions: { select: { id: true, correctIndex: true } } },
+    const test = await this.prisma.preSelectionTest.findFirst({
+      where: { id: testId, deletedAt: null },
+      include: {
+        questions: {
+          where: { deletedAt: null },
+          select: { id: true, correctIndex: true },
+        },
+      },
     });
     if (!test) throw new ApiError("Test not found", 404);
     if (test.questions.length === 0) {

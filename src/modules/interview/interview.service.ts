@@ -19,7 +19,7 @@ export class InterviewService {
         application: { include: { job: { select: { companyId: true } } } },
       },
     });
-    if (!interview) {
+    if (!interview || interview.deletedAt) {
       throw new ApiError("Interview not found", 404);
     }
     if (interview.application.job.companyId !== companyId) {
@@ -46,10 +46,7 @@ export class InterviewService {
 
     const application = await this.prisma.application.findUnique({
       where: { id: body.applicationId },
-      include: {
-        job: { select: { companyId: true } },
-        interview: true,
-      },
+      include: { job: { select: { companyId: true } } },
     });
 
     if (!application) {
@@ -64,9 +61,15 @@ export class InterviewService {
         400,
       );
     }
-    if (application.interview) {
+    const activeInterview = await this.prisma.interview.findFirst({
+      where: { applicationId: body.applicationId, deletedAt: null },
+    });
+    if (activeInterview) {
       throw new ApiError("This application already has an interview", 400);
     }
+    await this.prisma.interview.deleteMany({
+      where: { applicationId: body.applicationId, deletedAt: { not: null } },
+    });
 
     const scheduledAt = this.validateScheduledAt(body.scheduledAt);
 
@@ -115,6 +118,7 @@ export class InterviewService {
 
     const where: Prisma.InterviewWhereInput = {
       application: { job: { companyId } },
+      deletedAt: null,
     };
 
     const [data, total] = await Promise.all([
@@ -196,13 +200,16 @@ export class InterviewService {
       throw new ApiError("Your account is not linked to a company", 403);
     }
     await this.getInterviewOrThrow(id, companyId);
-    await this.prisma.interview.delete({ where: { id } });
+    await this.prisma.interview.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
     return { ok: true };
   };
 
   getInterviewsByUser = async (userId: string) => {
     const interviews = await this.prisma.interview.findMany({
-      where: { application: { userId } },
+      where: { application: { userId }, deletedAt: null },
       include: {
         application: {
           select: {

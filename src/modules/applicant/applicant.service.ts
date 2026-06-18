@@ -202,6 +202,10 @@ export class ApplicantService {
     });
     if (!application) return null;
 
+    if (application?.interview?.deletedAt) {
+      application.interview = null;
+    }
+
     const testAttempt = await this.findBestAttempt(
       application.userId,
       application.jobId,

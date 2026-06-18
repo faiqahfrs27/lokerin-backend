@@ -400,6 +400,7 @@ model PreSelectionTest {
   allowRetake     Boolean  @default(true) @map("allow_retake")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
   job       Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
   questions TestQuestion[]
@@ -417,6 +418,7 @@ model TestQuestion {
   correctIndex Int      @map("correct_index")
   order        Int      @default(0)
   createdAt    DateTime @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
 
   test PreSelectionTest @relation(fields: [testId], references: [id], onDelete: Cascade)
 
@@ -451,6 +453,7 @@ model Interview {
   reminderSent  Boolean  @default(false) @map("reminder_sent")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
