@@ -25,9 +25,6 @@ export class CompanyRouter {
     // GET /api/companies
     this.router.get("/", this.companyController.getPublicCompanies);
 
-    // GET /api/companies/:id
-    this.router.get("/:id", this.companyController.getPublicCompanyById);
-
     // ─── ADMIN ────────────────────────────────────────────────
 
     // GET /api/companies/me
@@ -55,6 +52,9 @@ export class CompanyRouter {
       this.uploadMiddleware.upload(2).single("logo"),
       this.companyController.updateLogo,
     );
+
+    // GET /api/companies/:id
+    this.router.get("/:id", this.companyController.getPublicCompanyById);
   };
 
   getRouter = () => this.router;
