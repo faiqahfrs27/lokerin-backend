@@ -7,7 +7,6 @@ type TxClient = Prisma.TransactionClient;
 export class AssessmentResultService {
   constructor(private prisma: PrismaClient) {}
 
-  // 1. START — begin new assessment attempt
   startAttempt = async (userId: string, assessmentId: string) => {
     const assessment = await this.prisma.skillAssessment.findFirst({
       where: { id: assessmentId, isPublished: true, deletedAt: null },
@@ -21,9 +20,16 @@ export class AssessmentResultService {
     if (!assessment)
       throw new ApiError("Assessment not found or not published", 404);
 
-    const result = await this.prisma.assessmentResult.create({
-      data: { userId, assessmentId },
+    const existing = await this.prisma.assessmentResult.findFirst({
+      where: { userId, assessmentId, completedAt: null },
+      orderBy: { startedAt: "desc" },
     });
+
+    const result =
+      existing ??
+      (await this.prisma.assessmentResult.create({
+        data: { userId, assessmentId },
+      }));
 
     return {
       resultId: result.id,
@@ -39,7 +45,6 @@ export class AssessmentResultService {
     };
   };
 
-  // 2. SUBMIT — submit answers and calculate score
   submitAnswers = async (
     userId: string,
     resultId: string,
@@ -72,7 +77,6 @@ export class AssessmentResultService {
     );
   };
 
-  // 3. GET BY ID — get single result with badge + cert
   getResultById = async (userId: string, resultId: string) => {
     const result = await this.prisma.assessmentResult.findFirst({
       where: { id: resultId, userId },
@@ -84,6 +88,15 @@ export class AssessmentResultService {
             skillCategory: true,
             passingScore: true,
             badgePhoto: true,
+            questions: {
+              where: { deletedAt: null },
+              select: {
+                id: true,
+                question: true,
+                options: true,
+                correctIndex: true,
+              },
+            },
           },
         },
         badgeEarned: true,
@@ -94,7 +107,6 @@ export class AssessmentResultService {
     return result;
   };
 
-  // 4. GET MY RESULTS — history of all attempts
   getMyResults = async (userId: string) => {
     return await this.prisma.assessmentResult.findMany({
       where: { userId },
@@ -113,7 +125,6 @@ export class AssessmentResultService {
     });
   };
 
-  // 5. GET USAGE — check assessment usage for current subscription cycle
   getUsage = async (userId: string) => {
     const sub = await this.prisma.subscription.findFirst({
       where: { userId, status: "active" },
@@ -142,7 +153,6 @@ export class AssessmentResultService {
     return { count, limit, canTake, reason: canTake ? "ok" : "limit_reached" };
   };
 
-  // Helper: calculate score from answers
   private calculateScore = async (
     assessmentId: string,
     answers: Record<string, number>,
@@ -163,7 +173,6 @@ export class AssessmentResultService {
     return { score, passed };
   };
 
-  // Helper: finalize attempt + sync badge/cert
   private finalizeAttempt = async (
     resultId: string,
     userId: string,
@@ -189,7 +198,6 @@ export class AssessmentResultService {
     });
   };
 
-  // Helper: get result and verify ownership
   private getResultOwned = async (userId: string, resultId: string) => {
     const result = await this.prisma.assessmentResult.findFirst({
       where: { id: resultId, userId },
