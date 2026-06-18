@@ -5,6 +5,7 @@ import { ValidationMiddleware } from "../../middlewares/validation.middleware.js
 import { SubscriptionController } from "./subscription.controller.js";
 import { SubscribeDTO } from "./dto/subscribe.dto.js";
 import { Role } from "../../../generated/prisma/enums.js";
+import { QueryPaginationDTO } from "./dto/query-pagination.dto.js";
 
 export class SubscriptionRouter {
   private router: Router;
@@ -39,26 +40,32 @@ export class SubscriptionRouter {
       "/payments",
       auth,
       devOnly,
+      this.validationMiddleware.validateQuery(QueryPaginationDTO),
       this.subscriptionController.getPayments,
     );
+
     this.router.patch(
       "/payments/:id/approve",
       auth,
       devOnly,
       this.subscriptionController.approvePayment,
     );
+
     this.router.patch(
       "/payments/:id/reject",
       auth,
       devOnly,
       this.subscriptionController.rejectPayment,
     );
+
     this.router.get(
       "/subscribers",
       auth,
       devOnly,
+      this.validationMiddleware.validateQuery(QueryPaginationDTO),
       this.subscriptionController.getSubscribers,
     );
+
     this.router.get(
       "/subscribers/stats",
       auth,
