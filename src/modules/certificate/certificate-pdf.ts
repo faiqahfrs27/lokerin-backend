@@ -1,31 +1,8 @@
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
+import { type CertData, type Doc, W, H, C } from "./certificate-types.js";
 
-export interface CertData {
-  holderName: string;
-  skillTitle: string;
-  skillCategory: string;
-  score: number;
-  issuedAt: Date;
-  code: string;
-}
-
-type Doc = PDFKit.PDFDocument;
-
-const W = 841.89;
-const H = 595.28;
-
-const C = {
-  orange500: "#F97316",
-  orange600: "#EA580C",
-  orange700: "#C2410C",
-  stone900: "#1C1917",
-  stone600: "#57534E",
-  stone400: "#A8A29E",
-  stone300: "#D6D3D1",
-  orange200: "#FED7AA",
-  orange50: "#FFF7ED",
-};
+export type { CertData };
 
 const makeQrBuffer = async (code: string) => {
   const url = `${process.env.BASE_URL_FE}/verify/${code}`;
