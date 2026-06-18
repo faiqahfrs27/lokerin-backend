@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { CompanyReviewService } from "./company-review.service.js";
+import { QueryReviewDTO } from "./dto/query-review.dto.js";
 
 export class CompanyReviewController {
   constructor(private companyReviewService: CompanyReviewService) {}
@@ -27,8 +28,10 @@ export class CompanyReviewController {
 
   // GET /api/company-reviews/:companyId
   getReviews = async (req: Request, res: Response) => {
+    const query = req.query as unknown as QueryReviewDTO;
     const result = await this.companyReviewService.getReviews(
       req.params.companyId as string,
+      query,
     );
     res.status(200).send(result);
   };
