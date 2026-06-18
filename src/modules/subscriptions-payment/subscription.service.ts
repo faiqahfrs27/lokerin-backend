@@ -81,26 +81,38 @@ export class SubscriptionService {
   };
 
   // DEV: list all payments for approval
-  getPayments = async () => {
-    return await this.prisma.payment.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            email: true,
-            profile: { select: { fullName: true } },
+  getPayments = async (query: { page?: number; limit?: number }) => {
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
+
+    const [payments, total] = await Promise.all([
+      this.prisma.payment.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              email: true,
+              profile: { select: { fullName: true } },
+            },
           },
+          subscription: { select: { plan: { select: { name: true } } } },
         },
-        subscription: { select: { plan: { select: { name: true } } } },
-      },
-    });
+      }),
+      this.prisma.payment.count(),
+    ]);
+
+    return {
+      data: payments,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   };
 
   // DEV: list all subscribers with payment history
-  getSubscribers = async () => {
-    return await this.subscribersHelper.getSubscribers();
+  getSubscribers = async (query: { page?: number; limit?: number }) => {
+    return await this.subscribersHelper.getSubscribers(query);
   };
-
   // DEV: get subscriber stats for dashboard
   getSubscriberStats = async () => {
     return await this.subscribersHelper.getSubscriberStats();

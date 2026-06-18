@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { SubscriptionService } from "./subscription.service.js";
 import { ApiError } from "../../utils/api-error.js";
+import { QueryPaginationDTO } from "./dto/query-pagination.dto.js";
 
 export class SubscriptionController {
   constructor(private subscriptionService: SubscriptionService) {}
@@ -26,7 +27,8 @@ export class SubscriptionController {
 
   // DEV: list payments
   getPayments = async (req: Request, res: Response) => {
-    const result = await this.subscriptionService.getPayments();
+    const query = req.query as unknown as QueryPaginationDTO;
+    const result = await this.subscriptionService.getPayments(query);
     res.status(200).send(result);
   };
 
@@ -50,7 +52,8 @@ export class SubscriptionController {
 
   // DEV: list all subscribers with payment history
   getSubscribers = async (req: Request, res: Response) => {
-    const result = await this.subscriptionService.getSubscribers();
+    const query = req.query as unknown as QueryPaginationDTO;
+    const result = await this.subscriptionService.getSubscribers(query);
     res.status(200).send(result);
   };
 
