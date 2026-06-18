@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Role } from "../../../generated/prisma/enums.js";
 import { AuthMiddleware } from "../../middlewares/auth.middleware.js";
+import { UploadMiddleware } from "../../middlewares/upload.middleware.js";
 import { ValidationMiddleware } from "../../middlewares/validation.middleware.js";
 import { CreateJobDTO } from "./dto/create-job.dto.js";
 import { QueryJobDTO } from "./dto/query-job.dto.js";
@@ -14,6 +15,7 @@ export class JobRouter {
     private jobController: JobController,
     private validationMiddleware: ValidationMiddleware,
     private authMiddleware: AuthMiddleware,
+    private uploadMiddleware: UploadMiddleware,
   ) {
     this.router = Router();
     this.initRoutes();
@@ -57,6 +59,14 @@ export class JobRouter {
       this.authMiddleware.verifyRole([Role.admin]),
       this.validationMiddleware.validateBody(UpdateJobDTO),
       this.jobController.updateJob,
+    );
+
+    this.router.patch(
+      "/:id/banner",
+      this.authMiddleware.verifyToken(),
+      this.authMiddleware.verifyRole([Role.admin]),
+      this.uploadMiddleware.upload(5).single("banner"),
+      this.jobController.updateJobBanner,
     );
 
     this.router.patch(
