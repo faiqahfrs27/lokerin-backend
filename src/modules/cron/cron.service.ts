@@ -93,6 +93,7 @@ export class CronService {
       where: {
         scheduledAt: { gte: tomorrow, lt: dayAfter },
         reminderSent: false,
+        deletedAt: null,
       },
       include: {
         application: {
