@@ -1,11 +1,15 @@
 import { Job, Prisma, PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
+import { CloudinaryService } from "../cloudinary/cloudinary.service.js";
 import { CreateJobDTO } from "./dto/create-job.dto.js";
 import { UpdateJobDTO } from "./dto/update-job.dto.js";
 import { QueryJobDTO } from "./dto/query-job.dto.js";
 
 export class JobService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(
+    private prisma: PrismaClient,
+    private cloudinaryService: CloudinaryService,
+  ) {}
 
   private getJobOrThrow = async (
     jobId: string,
@@ -259,5 +263,24 @@ export class JobService {
     });
 
     return { message: "Job deleted successfully" };
+  };
+
+  updateJobBanner = async (
+    jobId: string,
+    companyId: string | undefined,
+    file: Express.Multer.File,
+  ) => {
+    if (!companyId) {
+      throw new ApiError("Your account is not linked to a company", 403);
+    }
+    await this.getJobOrThrow(jobId, companyId);
+
+    const result = await this.cloudinaryService.upload(file);
+    const bannerUrl = result.secure_url;
+
+    return this.prisma.job.update({
+      where: { id: jobId },
+      data: { bannerUrl },
+    });
   };
 }

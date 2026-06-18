@@ -149,7 +149,7 @@ export class App {
     const companyService = new CompanyService(prisma, cloudinaryService);
 
     //jobService
-    const jobService = new JobService(prisma);
+    const jobService = new JobService(prisma, cloudinaryService);
 
     //savedJobsService
     const savedJobsService = new SavedJobsService(prisma);
@@ -337,6 +337,7 @@ export class App {
       jobController,
       validationMiddleware,
       authMiddleware,
+      uploadMiddleware,
     );
 
     const savedJobsRouter = new SavedJobsRouter(

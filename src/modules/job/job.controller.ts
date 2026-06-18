@@ -48,6 +48,18 @@ export class JobController {
     res.status(200).send(result);
   };
 
+  updateJobBanner = async (req: Request, res: Response) => {
+    const companyId = this.getCompanyId(res);
+    const id = req.params.id as string;
+    const file = req.file;
+    if (!file) {
+      res.status(400).send({ message: "No banner file uploaded" });
+      return;
+    }
+    const result = await this.jobService.updateJobBanner(id, companyId, file);
+    res.status(200).send(result);
+  };
+
   togglePublish = async (req: Request, res: Response) => {
     const companyId = this.getCompanyId(res);
     const id = req.params.id as string;
