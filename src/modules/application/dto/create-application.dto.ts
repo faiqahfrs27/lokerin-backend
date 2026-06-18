@@ -5,9 +5,6 @@ export class CreateApplicationDTO {
   @IsUUID()
   jobId!: string;
 
-  @IsUrl()
-  cvUrl!: string;
-
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

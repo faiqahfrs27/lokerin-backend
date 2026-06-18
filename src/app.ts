@@ -273,7 +273,10 @@ export class App {
     const applicantController = new ApplicantController(applicantService);
 
     //applicationController
-    const applicationController = new ApplicationController(applicationService);
+    const applicationController = new ApplicationController(
+      applicationService,
+      cloudinaryService,
+    );
 
     //subscriptionController
     const subscriptionController = new SubscriptionController(
@@ -391,6 +394,7 @@ export class App {
       applicationController,
       validationMiddleware,
       authMiddleware,
+      uploadMiddleware,
     );
 
     const preSelectionTestRouter = new PreSelectionTestRouter(

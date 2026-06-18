@@ -248,7 +248,7 @@ model Job {
   isPublished Boolean   @default(false) @map("is_published")
   hasTest     Boolean   @default(false) @map("has_test")
   createdAt   DateTime  @default(now()) @map("created_at")
-  deletedAt    DateTime? @map("deleted_at")
+  deletedAt   DateTime? @map("deleted_at")
 
   company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category         JobCategory       @relation(fields: [categoryId], references: [id])
@@ -280,6 +280,7 @@ model Application {
   userId          String            @map("user_id") @db.Uuid
   jobId           String            @map("job_id") @db.Uuid
   cvUrl           String            @map("cv_url")
+  cvPublicId      String?           @map("cv_public_id")
   expectedSalary  Decimal?          @map("expected_salary") @db.Decimal(15, 2)
   status          ApplicationStatus @default(pending)
   rejectionReason String?           @map("rejection_reason") @db.Text
@@ -391,15 +392,15 @@ model Certificate {
 }
 
 model PreSelectionTest {
-  id              String   @id @default(uuid()) @db.Uuid
-  jobId           String   @unique @map("job_id") @db.Uuid
+  id              String    @id @default(uuid()) @db.Uuid
+  jobId           String    @unique @map("job_id") @db.Uuid
   title           String
-  description     String?  @db.Text
-  passingScore    Int      @default(75) @map("passing_score")
-  durationMinutes Int      @default(30) @map("duration_minutes")
-  allowRetake     Boolean  @default(true) @map("allow_retake")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  description     String?   @db.Text
+  passingScore    Int       @default(75) @map("passing_score")
+  durationMinutes Int       @default(30) @map("duration_minutes")
+  allowRetake     Boolean   @default(true) @map("allow_retake")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
   job       Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
@@ -411,13 +412,13 @@ model PreSelectionTest {
 }
 
 model TestQuestion {
-  id           String   @id @default(uuid()) @db.Uuid
-  testId       String   @map("test_id") @db.Uuid
-  questionText String   @map("question_text") @db.Text
+  id           String    @id @default(uuid()) @db.Uuid
+  testId       String    @map("test_id") @db.Uuid
+  questionText String    @map("question_text") @db.Text
   options      String[]
-  correctIndex Int      @map("correct_index")
-  order        Int      @default(0)
-  createdAt    DateTime @default(now()) @map("created_at")
+  correctIndex Int       @map("correct_index")
+  order        Int       @default(0)
+  createdAt    DateTime  @default(now()) @map("created_at")
   deletedAt    DateTime? @map("deleted_at")
 
   test PreSelectionTest @relation(fields: [testId], references: [id], onDelete: Cascade)
@@ -445,14 +446,14 @@ model TestAttempt {
 }
 
 model Interview {
-  id            String   @id @default(uuid()) @db.Uuid
-  applicationId String   @unique @map("application_id") @db.Uuid
-  scheduledAt   DateTime @map("scheduled_at")
+  id            String    @id @default(uuid()) @db.Uuid
+  applicationId String    @unique @map("application_id") @db.Uuid
+  scheduledAt   DateTime  @map("scheduled_at")
   location      String?
-  notes         String?  @db.Text
-  reminderSent  Boolean  @default(false) @map("reminder_sent")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  notes         String?   @db.Text
+  reminderSent  Boolean   @default(false) @map("reminder_sent")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
   deletedAt     DateTime? @map("deleted_at")
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)

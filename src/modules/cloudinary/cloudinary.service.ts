@@ -1,7 +1,6 @@
 import axios from "axios";
 import crypto from "crypto";
 import FormData from "form-data";
-import { Multer } from "multer";
 
 export class CloudinaryService {
   private readonly cloudName: string;
@@ -26,17 +25,11 @@ export class CloudinaryService {
       .digest("hex");
   }
 
-  // Upload gambar ke Cloudinary
   async upload(file: Express.Multer.File) {
     const timestamp = Math.floor(Date.now() / 1000);
-
-    const params: Record<string, string | number> = {
-      timestamp,
-    };
-
+    const params: Record<string, string | number> = { timestamp };
     const signature = this.generateSignature(params);
 
-    // Bikin form data untuk dikirim ke Cloudinary
     const formData = new FormData();
     formData.append("file", file.buffer, {
       filename: file.originalname,
@@ -46,18 +39,15 @@ export class CloudinaryService {
     formData.append("timestamp", timestamp.toString());
     formData.append("signature", signature);
 
-    // Kirim ke Cloudinary via axios
     const response = await axios.post(
       `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
       formData,
       { headers: formData.getHeaders() },
     );
 
-    // Response berisi secure_url (URL gambar yang bisa diakses publik)
     return response.data;
   }
 
-  // Upload file (PDF, dll) ke Cloudinary
   async uploadFile(file: Express.Multer.File) {
     const timestamp = Math.floor(Date.now() / 1000);
     const params: Record<string, string | number> = { timestamp };
@@ -81,7 +71,31 @@ export class CloudinaryService {
     return response.data;
   }
 
-  // Hapus gambar dari Cloudinary berdasarkan URL
+  generateSignedUrl(publicId: string, expiresInSeconds = 300): string {
+    const expiration = Math.floor(Date.now() / 1000) + expiresInSeconds;
+
+    // Tanpa type=authenticated di toSign
+    const toSign = `expires_at=${expiration}&public_id=${publicId}${this.apiSecret}`;
+
+    const fullSignature = crypto
+      .createHash("sha1")
+      .update(toSign)
+      .digest("hex");
+
+    const params = new URLSearchParams({
+      api_key: this.apiKey,
+      signature: fullSignature,
+      expires_at: expiration.toString(),
+    });
+
+    const url = `https://res.cloudinary.com/${this.cloudName}/raw/authenticated/${publicId}?${params}`;
+
+    console.log("toSign:", toSign);
+    console.log("url:", url);
+
+    return url;
+  }
+
   async removeByUrl(secureUrl: string) {
     const publicId = this.extractPublicIdFromUrl(secureUrl);
     return this.removeByPublicId(publicId);
@@ -110,9 +124,6 @@ export class CloudinaryService {
     return response.data;
   }
 
-  // Ambil public_id dari URL Cloudinary
-  // contoh URL: https://res.cloudinary.com/.../image/upload/v1234/events/abc.jpg
-  // public_id-nya: events/abc
   private extractPublicIdFromUrl(url: string): string {
     const withoutQuery = url.split("?")[0];
     const parts = withoutQuery.split("/");

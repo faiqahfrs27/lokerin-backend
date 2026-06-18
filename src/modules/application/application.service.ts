@@ -66,8 +66,10 @@ export class ApplicationService {
   createApplication = async (
     userId: string | undefined,
     body: CreateApplicationDTO,
+    cvData?: { publicId: string; secureUrl: string },
   ) => {
     if (!userId) throw new ApiError("Not authenticated", 401);
+    if (!cvData) throw new ApiError("CV is required", 400);
     const job = await this.validateJobForApplication(body.jobId);
     await this.assertUserCanApply(body.jobId, userId);
     await this.validatePreSelectionGate(job, userId, body.testAttemptId);
@@ -76,7 +78,8 @@ export class ApplicationService {
       data: {
         userId,
         jobId: body.jobId,
-        cvUrl: body.cvUrl,
+        cvUrl: cvData.secureUrl,
+        cvPublicId: cvData.publicId,
         expectedSalary: body.expectedSalary,
       },
       include: {
@@ -129,6 +132,16 @@ export class ApplicationService {
   getApplicationById = async (id: string, userId: string | undefined) => {
     if (!userId) throw new ApiError("Not authenticated", 401);
 
+    const application = await this.findApplicationOrThrow(id);
+
+    if (application.userId !== userId) {
+      throw new ApiError("You don't have access to this application", 403);
+    }
+    return application;
+  };
+
+  // Dipakai internal (controller getCvSignedUrl) tanpa cek ownership
+  findApplicationOrThrow = async (id: string) => {
     const application = await this.prisma.application.findUnique({
       where: { id },
       include: {
@@ -146,9 +159,6 @@ export class ApplicationService {
       },
     });
     if (!application) throw new ApiError("Application not found", 404);
-    if (application.userId !== userId) {
-      throw new ApiError("You don't have access to this application", 403);
-    }
     return application;
   };
 }
