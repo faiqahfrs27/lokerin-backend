@@ -64,7 +64,8 @@ export class CvService {
             select: {
               fullName: true,
               address: true,
-              photoUrl: true,
+              gender: true,
+              birthDate: true,
             },
           },
         },
@@ -86,6 +87,14 @@ export class CvService {
       email: user.email,
       phone: cv?.phone ?? "",
       address: user.profile?.address ?? "",
+      gender: user.profile?.gender ?? undefined,
+      birthDate: user.profile?.birthDate
+        ? user.profile.birthDate.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })
+        : undefined,
       portfolioUrl: cv?.portfolioUrl ?? "",
       summary: cv?.summary ?? "",
       experiences: (cv?.experiences as unknown as CvExperience[]) ?? [],

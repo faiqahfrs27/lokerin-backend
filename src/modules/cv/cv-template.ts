@@ -1,49 +1,16 @@
 import PDFDocument from "pdfkit";
+import {
+  type CvData,
+  type CvExperience,
+  type CvEducation,
+  C,
+  FONT_BOLD,
+  FONT_REGULAR,
+  PAGE_MARGIN,
+  CONTENT_WIDTH,
+} from "./cv-types.js";
 
-// Type definitions for CV data sections
-export interface CvExperience {
-  company: string;
-  position: string;
-  startYear: string;
-  endYear?: string;
-  description?: string;
-}
-
-export interface CvEducation {
-  institution: string;
-  degree: string;
-  major: string;
-  startYear: string;
-  endYear?: string;
-  gpa?: string;
-}
-
-export interface CvData {
-  fullName: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  portfolioUrl?: string;
-  summary?: string;
-  experiences: CvExperience[];
-  educations: CvEducation[];
-  additionalSkills: string[];
-  verifiedSkills: string[];
-}
-
-// Colors
-const C = {
-  brand: "#F97316",
-  black: "#1C1917",
-  gray: "#57534E",
-  lightGray: "#A8A29E",
-  divider: "#D6D3D1",
-};
-
-const FONT_BOLD = "Helvetica-Bold";
-const FONT_REGULAR = "Helvetica";
-const PAGE_MARGIN = 50;
-const CONTENT_WIDTH = 495;
+export type { CvData, CvExperience, CvEducation };
 
 // Draw horizontal divider line
 const drawDivider = (doc: PDFKit.PDFDocument, y: number) => {
@@ -79,7 +46,13 @@ const drawHeader = (doc: PDFKit.PDFDocument, data: CvData) => {
   doc.moveDown(0.2);
   doc.font(FONT_REGULAR).fontSize(10).fillColor(C.gray);
 
-  const contactParts = [data.email, data.phone, data.address].filter(Boolean);
+  const contactParts = [
+    data.email,
+    data.phone,
+    data.gender,
+    data.birthDate,
+    data.address,
+  ].filter(Boolean);
 
   doc.text(contactParts.join("  ·  "));
 
@@ -111,7 +84,6 @@ const drawExperience = (
 ) => {
   if (!experiences.length) return;
   drawSectionHeader(doc, "Experience");
-
   experiences.forEach((exp, i) => {
     const period = exp.endYear
       ? `${exp.startYear} – ${exp.endYear}`
@@ -133,7 +105,6 @@ const drawExperience = (
         .fillColor(C.black)
         .text(exp.description, { lineGap: 3 });
     }
-
     if (i < experiences.length - 1) doc.moveDown(0.6);
   });
 };
@@ -209,10 +180,8 @@ export const buildCvPdf = async (data: CvData): Promise<Buffer> => {
   const chunks: Buffer[] = [];
   doc.on("data", (c) => chunks.push(c));
 
-  // Header
   drawHeader(doc, data);
 
-  // Sections
   drawSummary(doc, data.summary);
   drawExperience(doc, data.experiences);
   drawEducation(doc, data.educations);

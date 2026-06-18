@@ -24,7 +24,6 @@ export class AssessmentResultService {
       where: { userId, assessmentId, completedAt: null },
       orderBy: { startedAt: "desc" },
     });
-
     const result =
       existing ??
       (await this.prisma.assessmentResult.create({
@@ -55,13 +54,11 @@ export class AssessmentResultService {
     if (result.completedAt) {
       throw new ApiError("This attempt has already been submitted", 400);
     }
-
     const { score, passed } = await this.calculateScore(
       result.assessmentId,
       answers,
       result.assessment.passingScore,
     );
-
     const elapsedMs = Date.now() - result.startedAt.getTime();
     const maxAllowedMs = result.assessment.durationMin * 60 * 1000 + 10_000;
     const wasOverTime = elapsedMs > maxAllowedMs;
@@ -130,16 +127,13 @@ export class AssessmentResultService {
       where: { userId, status: "active" },
       include: { plan: { select: { name: true } } },
     });
-
     if (!sub) {
       return { count: 0, limit: 0, canTake: false, reason: "no_subscription" };
     }
-
     const isPro = sub.plan.name.toLowerCase().includes("professional");
     if (isPro) {
       return { count: 0, limit: null, canTake: true, reason: "unlimited" };
     }
-
     const count = await this.prisma.assessmentResult.count({
       where: {
         userId,
@@ -147,7 +141,6 @@ export class AssessmentResultService {
         completedAt: { not: null },
       },
     });
-
     const limit = 2;
     const canTake = count < limit;
     return { count, limit, canTake, reason: canTake ? "ok" : "limit_reached" };
@@ -162,12 +155,10 @@ export class AssessmentResultService {
       where: { assessmentId, deletedAt: null },
       select: { id: true, correctIndex: true },
     });
-
     let correctCount = 0;
     for (const q of questions) {
       if (answers[q.id] === q.correctIndex) correctCount++;
     }
-
     const score = Math.round((correctCount / questions.length) * 100);
     const passed = score >= passingScore;
     return { score, passed };

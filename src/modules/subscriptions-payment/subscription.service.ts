@@ -16,8 +16,6 @@ export class SubscriptionService {
   ) {
     this.subscribersHelper = new SubscribersHelper(prisma);
   }
-
-  // USER: subscribe to a plan + upload payment proof
   subscribe = async (
     userId: string,
     planId: string,
@@ -37,7 +35,6 @@ export class SubscriptionService {
     );
   };
 
-  // Helper: create subscription + payment (both pending) in one transaction
   private createPendingSubscription = async (
     userId: string,
     planId: string,
@@ -64,7 +61,6 @@ export class SubscriptionService {
     });
   };
 
-  // USER: get current subscription status
   getMySubscription = async (userId: string) => {
     return await this.prisma.subscription.findFirst({
       where: { userId },
@@ -80,7 +76,6 @@ export class SubscriptionService {
     });
   };
 
-  // DEV: list all payments for approval
   getPayments = async (query: { page?: number; limit?: number }) => {
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 10);
@@ -109,16 +104,13 @@ export class SubscriptionService {
     };
   };
 
-  // DEV: list all subscribers with payment history
   getSubscribers = async (query: { page?: number; limit?: number }) => {
     return await this.subscribersHelper.getSubscribers(query);
   };
-  // DEV: get subscriber stats for dashboard
   getSubscriberStats = async () => {
     return await this.subscribersHelper.getSubscriberStats();
   };
 
-  // DEV: approve payment, then activate subscription for 30 days
   approvePayment = async (paymentId: string, devId: string) => {
     const payment = await this.getPendingPayment(paymentId);
     const now = new Date();
@@ -165,7 +157,6 @@ export class SubscriptionService {
     return subscription;
   };
 
-  // DEV: reject payment
   rejectPayment = async (paymentId: string) => {
     await this.getPendingPayment(paymentId);
 
@@ -196,7 +187,6 @@ export class SubscriptionService {
     return payment;
   };
 
-  // Helper: ensure payment exists and is still pending
   private getPendingPayment = async (paymentId: string) => {
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
