@@ -34,7 +34,14 @@ export class CompanyController {
   ) => {
     try {
       const { id } = req.params;
-      const result = await this.companyService.getPublicCompanyById(id);
+      const jobPage = req.query.jobPage ? Number(req.query.jobPage) : undefined;
+      const jobLimit = req.query.jobLimit
+        ? Number(req.query.jobLimit)
+        : undefined;
+      const result = await this.companyService.getPublicCompanyById(id, {
+        jobPage,
+        jobLimit,
+      });
       res.status(200).json(result);
     } catch (error) {
       next(error);

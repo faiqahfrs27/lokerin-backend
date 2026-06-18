@@ -108,7 +108,13 @@ export class CompanyService {
     };
   };
 
-  getPublicCompanyById = async (id: string) => {
+  getPublicCompanyById = async (
+    id: string,
+    query: { jobPage?: number; jobLimit?: number } = {},
+  ) => {
+    const jobPage = Number(query.jobPage ?? 1);
+    const jobLimit = Number(query.jobLimit ?? 10);
+
     const company = await this.prisma.company.findUnique({
       where: { id },
       select: {
@@ -119,25 +125,43 @@ export class CompanyService {
         city: true,
         logoUrl: true,
         descriptionRte: true,
-        jobs: {
-          where: { isPublished: true },
-          select: {
-            id: true,
-            title: true,
-            city: true,
-            salary: true,
-            deadline: true,
-            hasTest: true,
-            createdAt: true,
-            tags: true,
-            category: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: "desc" },
-        },
       },
     });
 
     if (!company) throw new ApiError("Company not found", 404);
-    return company;
+
+    const [jobs, totalJobs] = await Promise.all([
+      this.prisma.job.findMany({
+        where: { companyId: id, isPublished: true },
+        select: {
+          id: true,
+          title: true,
+          city: true,
+          salary: true,
+          deadline: true,
+          hasTest: true,
+          createdAt: true,
+          tags: true,
+          category: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: (jobPage - 1) * jobLimit,
+        take: jobLimit,
+      }),
+      this.prisma.job.count({
+        where: { companyId: id, isPublished: true },
+      }),
+    ]);
+
+    return {
+      ...company,
+      jobs,
+      jobsMeta: {
+        page: jobPage,
+        limit: jobLimit,
+        total: totalJobs,
+        totalPages: Math.ceil(totalJobs / jobLimit),
+      },
+    };
   };
 }
