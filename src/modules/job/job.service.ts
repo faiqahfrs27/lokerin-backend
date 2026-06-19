@@ -128,6 +128,11 @@ export class JobService {
     }
     if (query.categoryId) {
       where.categoryId = query.categoryId;
+    } else if (query.category && query.category !== "All") {
+      // ← tambahan: filter by category name kalau categoryId tidak ada
+      where.category = {
+        name: { equals: query.category, mode: "insensitive" },
+      };
     }
     if (query.city) {
       where.city = { contains: query.city, mode: "insensitive" };

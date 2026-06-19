@@ -34,6 +34,10 @@ export class QueryJobDTO {
   categoryId?: string;
 
   @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
   @IsUUID()
   companyId?: string;
 
