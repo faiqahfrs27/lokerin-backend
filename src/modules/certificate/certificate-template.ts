@@ -74,7 +74,7 @@ export const certificateHtml = (data: CertData, qrDataUrl: string) => {
   </div>
   <div class="foot">
     <img class="qr-img" src="${qrDataUrl}"/>
-    <div class="foot-meta">Verify at lokerin.com/verify<br><span class="code">${data.code}</span></div>
+    <div class="foot-meta">${process.env.BASE_URL_FE}/verify<br><span class="code">${data.code}</span></div>
   </div>
 </div>
 </body></html>`;

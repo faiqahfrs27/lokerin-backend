@@ -159,7 +159,7 @@ const drawSignature = (doc: Doc, data: CertData) => {
 const drawFooter = (doc: Doc, data: CertData, qr: Buffer) => {
   const y = H - 80;
   doc.font("Helvetica").fontSize(9).fillColor(C.stone400);
-  doc.text(`Verify at lokerin.com/verify`, W / 2 - 100, y, {
+  doc.text(`${process.env.BASE_URL_FE}/verify`, W / 2 - 100, y, {
     width: 200,
     align: "center",
   });
