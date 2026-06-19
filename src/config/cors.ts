@@ -4,7 +4,7 @@ export const corsOptions: CorsOptions = {
   origin: [
     "http://localhost:5173",
     "http://localhost:4173",
-    "https://lokerin-five.vercel.app",
+    "https://lokerin.faiqahfrs.my.id",
     process.env.BASE_URL_FE!,
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
