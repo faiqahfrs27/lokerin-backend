@@ -10,11 +10,14 @@ export class MailService {
 
   constructor() {
     this.transporter = createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.MAIL_USER, // email
-        pass: process.env.MAIL_PASS, // app password
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
       },
+      connectionTimeout: 10000,
     });
   }
 
