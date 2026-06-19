@@ -11,8 +11,6 @@ RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate
-
 EXPOSE 8000
 
-CMD ["sh", "-c", "npm run build && npm run db:deploy && npm run start"]
+CMD ["sh", "-c", "npx prisma generate && npm run build && npm run db:deploy && npm run start"]
