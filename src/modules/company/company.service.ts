@@ -72,7 +72,7 @@ export class CompanyService {
     limit?: number;
   }) => {
     const page = Number(query.page ?? 1);
-    const limit = Number(query.limit ?? 12);
+    const limit = Number(query.limit ?? 5);
     const sortBy = query.sortBy ?? "name";
     const sortOrder = query.sortOrder ?? "asc";
 

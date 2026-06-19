@@ -68,7 +68,7 @@ export class JobService {
     }
 
     const page = Number(query.page ?? 1);
-    const limit = Number(query.limit ?? 10);
+    const limit = Number(query.limit ?? 5);
     const sortBy = query.sortBy ?? "createdAt";
     const sortOrder = query.sortOrder ?? "desc";
 
