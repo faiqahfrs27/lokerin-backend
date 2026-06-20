@@ -132,4 +132,18 @@ export class CloudinaryService {
     const filename = publicIdParts.join("/");
     return filename.replace(/\.[^/.]+$/, "");
   }
+
+  generateUploadSignature(folder: string = "lokerin") {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const params = { timestamp, folder };
+    const signature = this.generateSignature(params);
+
+    return {
+      signature,
+      timestamp,
+      apiKey: this.apiKey,
+      cloudName: this.cloudName,
+      folder,
+    };
+  }
 }

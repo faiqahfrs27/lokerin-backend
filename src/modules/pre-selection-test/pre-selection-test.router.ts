@@ -46,6 +46,13 @@ export class PreSelectionTestRouter {
       this.controller.addQuestion,
     );
 
+    this.router.post(
+      "/jobs/:jobId/start",
+      this.authMiddleware.verifyToken(),
+      this.authMiddleware.verifyRole([Role.user]),
+      this.controller.startAttempt,
+    );
+
     this.router.get(
       "/by-job/:jobId",
       this.authMiddleware.verifyToken(),

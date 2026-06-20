@@ -95,6 +95,8 @@ import { CompanyReviewRouter } from "./modules/company-review/company-review.rou
 import { SavedJobsService } from "./modules/saved-jobs/saved-jobs.service.js";
 import { SavedJobsController } from "./modules/saved-jobs/saved-jobs.controller.js";
 import { SavedJobsRouter } from "./modules/saved-jobs/saved-jobs.router.js";
+import { CloudinaryController } from "./modules/cloudinary/cloudinary.controller.js";
+import { CloudinaryRouter } from "./modules/cloudinary/cloudinary.router.js";
 
 export class App {
   app: Express;
@@ -147,6 +149,8 @@ export class App {
 
     //companyService
     const companyService = new CompanyService(prisma, cloudinaryService);
+
+    const cloudinaryController = new CloudinaryController(cloudinaryService);
 
     //jobService
     const jobService = new JobService(prisma, cloudinaryService);
@@ -322,6 +326,11 @@ export class App {
       logoutController,
     );
 
+    const cloudinaryRouter = new CloudinaryRouter(
+      cloudinaryController,
+      authMiddleware,
+    );
+
     const profileRouter = new ProfileRouter(
       profileController,
       validationMiddleware,
@@ -455,6 +464,7 @@ export class App {
     this.app.use("/api/cv", cvRouter.getRouter());
     this.app.use("/api/analytics", analyticsRouter.getRouter());
     this.app.use("/api/company-reviews", companyReviewRouter.getRouter());
+    this.app.use("/api/cloudinary", cloudinaryRouter.getRouter());
   }
 
   private errorMiddleware() {

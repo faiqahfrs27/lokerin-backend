@@ -85,4 +85,11 @@ export class PreSelectionTestController {
     const result = await this.testService.submitAttempt(id, userId, req.body);
     res.status(201).send(result);
   };
+
+  startAttempt = async (req: Request, res: Response) => {
+    const jobId = req.params.jobId as string;
+    const userId = this.getUserId(res);
+    const result = await this.testService.startAttempt(jobId, userId);
+    res.status(200).send(result);
+  };
 }
