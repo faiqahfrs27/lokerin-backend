@@ -3,7 +3,6 @@ import { PrismaClient } from "../../../generated/prisma/client.js";
 export class SubscribersHelper {
   constructor(private prisma: PrismaClient) {}
 
-  // DEV: get all subscribers with their payment history
   getSubscribers = async (query: { page?: number; limit?: number }) => {
     const page = Number(query.page ?? 1);
     const limit = Number(query.limit ?? 10);
@@ -53,7 +52,6 @@ export class SubscribersHelper {
     };
   };
 
-  // DEV: get summary stats for dashboard
   getSubscriberStats = async () => {
     const [total, active, standardCount, professionalCount] = await Promise.all(
       [

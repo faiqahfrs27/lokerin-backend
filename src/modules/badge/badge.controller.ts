@@ -4,7 +4,6 @@ import { BadgeService } from "./badge.service.js";
 export class BadgeController {
   constructor(private badgeService: BadgeService) {}
 
-  // GET /api/badges/me
   getMyBadges = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const result = await this.badgeService.getMyBadges(userId);

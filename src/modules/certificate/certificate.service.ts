@@ -5,7 +5,6 @@ import { buildCertificatePdf } from "./certificate-pdf.js";
 export class CertificateService {
   constructor(private prisma: PrismaClient) {}
 
-  // GET /api/certificates/me — list certificate user
   getMyCertificates = async (userId: string) => {
     return await this.prisma.certificate.findMany({
       where: { userId },
@@ -22,7 +21,6 @@ export class CertificateService {
     });
   };
 
-  // GET /api/certificates/verify/:code — PUBLIC, QR verify
   verifyByCode = async (code: string) => {
     const cert = await this.prisma.certificate.findUnique({
       where: { code },
@@ -51,7 +49,6 @@ export class CertificateService {
     };
   };
 
-  // ===== BARU: GET /api/certificates/:id/download — generate PDF on-demand =====
   generatePdf = async (userId: string, certId: string) => {
     const cert = await this.prisma.certificate.findFirst({
       where: { id: certId, userId },

@@ -16,10 +16,8 @@ export class XenditRouter {
   private initializedRoutes = () => {
     const auth = this.authMiddleware.verifyToken();
 
-    // USER: create invoice (requires authentication)
     this.router.post("/invoice", auth, this.xenditController.createInvoice);
 
-    // PUBLIC: webhook endpoint for Xendit payment notifications
     this.router.post("/webhook", this.xenditController.handleWebhook);
   };
 

@@ -11,7 +11,6 @@ const SUBSCRIPTION_DAYS = 30;
 export class XenditService {
   constructor(private prisma: PrismaClient) {}
 
-  // USER: create xendit invoice for subscription payment
   createInvoice = async (userId: string, planId: string) => {
     const plan = await this.prisma.subscriptionPlan.findFirst({
       where: { id: planId, deletedAt: null },
@@ -75,17 +74,13 @@ export class XenditService {
     return { invoiceUrl: invoice.invoiceUrl };
   };
 
-  // WEBHOOK: handle payment notification from Xendit
   handleWebhook = async (callbackToken: string, body: XenditInvoiceBody) => {
-    // Verify callback token to ensure request is from Xendit
     if (callbackToken !== process.env.XENDIT_WEBHOOK_TOKEN) {
       throw new ApiError("Invalid callback token", 401);
     }
 
-    // Only process PAID invoices
     if (body.status !== "PAID") return { message: "Ignored" };
 
-    // Parse externalId to extract userId and planId
     const parts = body.external_id.split("_");
     const userId = parts[1];
     const planId = parts[2];
@@ -95,7 +90,6 @@ export class XenditService {
     const now = new Date();
     const end = new Date(now.getTime() + SUBSCRIPTION_DAYS * 86400000);
 
-    // Activate subscription and approve payment in one transaction
     await this.prisma.$transaction(
       async (tx) => {
         const sub = await tx.subscription.findFirst({
@@ -128,7 +122,6 @@ export class XenditService {
   };
 }
 
-// Type definition for Xendit invoice webhook body
 export interface XenditInvoiceBody {
   id: string;
   external_id: string;

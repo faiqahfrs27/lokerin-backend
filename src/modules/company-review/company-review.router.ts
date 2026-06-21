@@ -20,28 +20,24 @@ export class CompanyReviewRouter {
   private initializedRoutes = () => {
     const auth = this.authMiddleware.verifyToken();
 
-    // PUBLIC: get all reviews for a company
     this.router.get(
       "/:companyId",
       this.validationMiddleware.validateQuery(QueryReviewDTO),
       this.companyReviewController.getReviews,
     );
 
-    // AUTH: check eligibility to review
     this.router.get(
       "/:companyId/eligibility",
       auth,
       this.companyReviewController.checkEligibility,
     );
 
-    // AUTH: check if user already reviewed
     this.router.get(
       "/:companyId/me",
       auth,
       this.companyReviewController.getMyReview,
     );
 
-    // AUTH: submit a review
     this.router.post(
       "/:companyId",
       auth,

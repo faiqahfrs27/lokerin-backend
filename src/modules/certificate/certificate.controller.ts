@@ -4,14 +4,12 @@ import { CertificateService } from "./certificate.service.js";
 export class CertificateController {
   constructor(private certificateService: CertificateService) {}
 
-  // GET /api/certificates/me
   getMyCertificates = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const result = await this.certificateService.getMyCertificates(userId);
     res.status(200).send(result);
   };
 
-  // GET /api/certificates/verify/:code (public)
   verifyByCode = async (req: Request, res: Response) => {
     const result = await this.certificateService.verifyByCode(
       req.params.code as string,
@@ -19,7 +17,6 @@ export class CertificateController {
     res.status(200).send(result);
   };
 
-  // GET /api/certificates/:id/download
   downloadCertificate = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const pdf = await this.certificateService.generatePdf(

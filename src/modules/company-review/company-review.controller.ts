@@ -5,7 +5,6 @@ import { QueryReviewDTO } from "./dto/query-review.dto.js";
 export class CompanyReviewController {
   constructor(private companyReviewService: CompanyReviewService) {}
 
-  // GET /api/company-reviews/:companyId/eligibility
   checkEligibility = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const result = await this.companyReviewService.checkEligibility(
@@ -15,7 +14,6 @@ export class CompanyReviewController {
     res.status(200).send(result);
   };
 
-  // POST /api/company-reviews/:companyId
   createReview = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const result = await this.companyReviewService.createReview(
@@ -26,7 +24,6 @@ export class CompanyReviewController {
     res.status(201).send(result);
   };
 
-  // GET /api/company-reviews/:companyId
   getReviews = async (req: Request, res: Response) => {
     const query = req.query as unknown as QueryReviewDTO;
     const result = await this.companyReviewService.getReviews(
@@ -36,7 +33,6 @@ export class CompanyReviewController {
     res.status(200).send(result);
   };
 
-  // GET /api/company-reviews/:companyId/me
   getMyReview = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const result = await this.companyReviewService.getMyReview(

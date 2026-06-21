@@ -30,7 +30,6 @@ export interface CvData {
   verifiedSkills: string[];
 }
 
-// PDF layout constants
 export const C = {
   brand: "#F97316",
   black: "#1C1917",

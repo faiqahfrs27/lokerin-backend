@@ -2,7 +2,6 @@ import { Prisma } from "../../../generated/prisma/client.js";
 
 type TxClient = Prisma.TransactionClient;
 
-// Create badge + certificate for first-time pass
 export const createCredentials = async (
   tx: TxClient,
   userId: string,
@@ -17,7 +16,6 @@ export const createCredentials = async (
   });
 };
 
-// Upgrade badge + certificate to higher score result
 export const upgradeCredentials = async (
   tx: TxClient,
   badgeId: string,
@@ -34,7 +32,6 @@ export const upgradeCredentials = async (
   });
 };
 
-// Sync badge + certificate — create or upgrade based on score
 export const syncCredentials = async (
   tx: TxClient,
   userId: string,

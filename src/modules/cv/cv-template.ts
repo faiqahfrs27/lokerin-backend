@@ -12,7 +12,6 @@ import {
 
 export type { CvData, CvExperience, CvEducation };
 
-// Draw horizontal divider line
 const drawDivider = (doc: PDFKit.PDFDocument, y: number) => {
   doc
     .moveTo(PAGE_MARGIN, y)
@@ -22,7 +21,6 @@ const drawDivider = (doc: PDFKit.PDFDocument, y: number) => {
     .stroke();
 };
 
-// Draw section header (e.g. "EXPERIENCE")
 const drawSectionHeader = (doc: PDFKit.PDFDocument, title: string) => {
   doc.moveDown(0.5);
   drawDivider(doc, doc.y);
@@ -35,7 +33,6 @@ const drawSectionHeader = (doc: PDFKit.PDFDocument, title: string) => {
   doc.moveDown(0.3);
 };
 
-// Draw name + contact header
 const drawHeader = (doc: PDFKit.PDFDocument, data: CvData) => {
   doc
     .font(FONT_BOLD)
@@ -66,7 +63,6 @@ const drawHeader = (doc: PDFKit.PDFDocument, data: CvData) => {
   }
 };
 
-// Draw summary section
 const drawSummary = (doc: PDFKit.PDFDocument, summary?: string) => {
   if (!summary) return;
   drawSectionHeader(doc, "Summary");
@@ -77,7 +73,6 @@ const drawSummary = (doc: PDFKit.PDFDocument, summary?: string) => {
     .text(summary, { lineGap: 3 });
 };
 
-// Draw experience section
 const drawExperience = (
   doc: PDFKit.PDFDocument,
   experiences: CvExperience[],
@@ -109,7 +104,6 @@ const drawExperience = (
   });
 };
 
-// Draw education section
 const drawEducation = (doc: PDFKit.PDFDocument, educations: CvEducation[]) => {
   if (!educations.length) return;
   drawSectionHeader(doc, "Education");
@@ -135,7 +129,6 @@ const drawEducation = (doc: PDFKit.PDFDocument, educations: CvEducation[]) => {
   });
 };
 
-// Draw skills section (verified + additional)
 const drawSkills = (
   doc: PDFKit.PDFDocument,
   verifiedSkills: string[],
@@ -170,7 +163,6 @@ const drawSkills = (
   }
 };
 
-// Main function — build CV PDF buffer
 export const buildCvPdf = async (data: CvData): Promise<Buffer> => {
   const doc = new PDFDocument({
     size: "A4",
@@ -187,7 +179,6 @@ export const buildCvPdf = async (data: CvData): Promise<Buffer> => {
   drawEducation(doc, data.educations);
   drawSkills(doc, data.verifiedSkills, data.additionalSkills);
 
-  // Footer
   doc.moveDown(1);
   drawDivider(doc, doc.y);
   doc.moveDown(0.3);
