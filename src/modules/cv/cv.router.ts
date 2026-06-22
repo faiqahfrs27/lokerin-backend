@@ -19,10 +19,8 @@ export class CvRouter {
   private initializedRoutes = () => {
     const auth = this.authMiddleware.verifyToken();
 
-    // Get CV data
     this.router.get("/", auth, this.cvController.getCv);
 
-    // Save CV data
     this.router.post(
       "/",
       auth,
@@ -30,7 +28,6 @@ export class CvRouter {
       this.cvController.saveCv,
     );
 
-    // Download CV as PDF
     this.router.get("/download", auth, this.cvController.downloadCv);
   };
 

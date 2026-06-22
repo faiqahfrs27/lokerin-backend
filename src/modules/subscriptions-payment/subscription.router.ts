@@ -25,7 +25,6 @@ export class SubscriptionRouter {
     const devOnly = this.authMiddleware.verifyRole([Role.dev]);
     const upload = this.uploadMiddleware.upload(2);
 
-    // USER routes
     this.router.post(
       "/subscribe",
       auth,
@@ -35,7 +34,6 @@ export class SubscriptionRouter {
     );
     this.router.get("/me", auth, this.subscriptionController.getMySubscription);
 
-    // DEV routes
     this.router.get(
       "/payments",
       auth,

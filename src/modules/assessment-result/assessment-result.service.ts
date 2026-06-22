@@ -8,6 +8,16 @@ export class AssessmentResultService {
   constructor(private prisma: PrismaClient) {}
 
   startAttempt = async (userId: string, assessmentId: string) => {
+    const access = await this.canAccessAssessment(userId, assessmentId);
+    if (!access.allowed) {
+      throw new ApiError(
+        access.reason === "no_subscription"
+          ? "Active subscription required to take assessments"
+          : "Assessment slot limit reached for this subscription cycle",
+        403,
+      );
+    }
+
     const assessment = await this.prisma.skillAssessment.findFirst({
       where: { id: assessmentId, isPublished: true, deletedAt: null },
       include: {
@@ -128,22 +138,68 @@ export class AssessmentResultService {
       include: { plan: { select: { name: true } } },
     });
     if (!sub) {
-      return { count: 0, limit: 0, canTake: false, reason: "no_subscription" };
+      return {
+        unlockedAssessmentIds: [] as string[],
+        count: 0,
+        limit: 0,
+        canTake: false,
+        reason: "no_subscription" as const,
+      };
     }
+
     const isPro = sub.plan.name.toLowerCase().includes("professional");
     if (isPro) {
-      return { count: 0, limit: null, canTake: true, reason: "unlimited" };
+      return {
+        unlockedAssessmentIds: [] as string[],
+        count: 0,
+        limit: null,
+        canTake: true,
+        reason: "unlimited" as const,
+      };
     }
-    const count = await this.prisma.assessmentResult.count({
+
+    const completed = await this.prisma.assessmentResult.findMany({
       where: {
         userId,
         createdAt: { gte: sub.startDate },
         completedAt: { not: null },
       },
+      select: { assessmentId: true },
+      distinct: ["assessmentId"],
     });
+
+    const unlockedAssessmentIds = completed.map((c) => c.assessmentId);
     const limit = 2;
-    const canTake = count < limit;
-    return { count, limit, canTake, reason: canTake ? "ok" : "limit_reached" };
+    const canTake = unlockedAssessmentIds.length < limit;
+
+    return {
+      unlockedAssessmentIds,
+      count: unlockedAssessmentIds.length,
+      limit,
+      canTake,
+      reason: (canTake ? "ok" : "limit_reached") as "ok" | "limit_reached",
+    };
+  };
+
+  private canAccessAssessment = async (
+    userId: string,
+    assessmentId: string,
+  ) => {
+    const usage = await this.getUsage(userId);
+
+    if (usage.reason === "no_subscription") {
+      return { allowed: false, reason: usage.reason };
+    }
+    if (usage.reason === "unlimited") {
+      return { allowed: true, reason: usage.reason };
+    }
+    if (usage.unlockedAssessmentIds.includes(assessmentId)) {
+      return { allowed: true, reason: "retake" as const };
+    }
+    if (usage.canTake) {
+      return { allowed: true, reason: "new_slot" as const };
+    }
+    return { allowed: false, reason: "limit_reached" as const };
   };
 
   private calculateScore = async (

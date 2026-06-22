@@ -6,7 +6,6 @@ import { UpdateAssessmentDTO } from "./dto/update-assessment.dto.js";
 export class AssessmentService {
   constructor(private prisma: PrismaClient) {}
 
-  // ===== USER-FACING =====
   getPublishedAssessments = async () => {
     return await this.prisma.skillAssessment.findMany({
       where: {
@@ -27,7 +26,6 @@ export class AssessmentService {
     });
   };
 
-  // ===== DEV-ONLY =====
   getAssessments = async () => {
     return await this.prisma.skillAssessment.findMany({
       where: { deletedAt: null },

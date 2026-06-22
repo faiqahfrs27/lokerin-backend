@@ -16,10 +16,8 @@ export class CertificateRouter {
   private initializedRoutes = () => {
     const auth = this.authMiddleware.verifyToken();
 
-    // PUBLIC
     this.router.get("/verify/:code", this.certificateController.verifyByCode);
 
-    // PRIVATE
     this.router.get("/me", auth, this.certificateController.getMyCertificates);
 
     this.router.get(

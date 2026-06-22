@@ -6,7 +6,6 @@ import { QueryPaginationDTO } from "./dto/query-pagination.dto.js";
 export class SubscriptionController {
   constructor(private subscriptionService: SubscriptionService) {}
 
-  // USER: subscribe with payment proof
   subscribe = async (req: Request, res: Response) => {
     if (!req.file) throw new ApiError("Payment proof is required", 400);
     const userId = res.locals.user.id;
@@ -18,21 +17,18 @@ export class SubscriptionController {
     res.status(201).send(result);
   };
 
-  // USER: get current subscription
   getMySubscription = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const result = await this.subscriptionService.getMySubscription(userId);
     res.status(200).send(result);
   };
 
-  // DEV: list payments
   getPayments = async (req: Request, res: Response) => {
     const query = req.query as unknown as QueryPaginationDTO;
     const result = await this.subscriptionService.getPayments(query);
     res.status(200).send(result);
   };
 
-  // DEV: approve a payment
   approvePayment = async (req: Request, res: Response) => {
     const devId = res.locals.user.id;
     const result = await this.subscriptionService.approvePayment(
@@ -42,7 +38,6 @@ export class SubscriptionController {
     res.status(200).send(result);
   };
 
-  // DEV: reject a payment
   rejectPayment = async (req: Request, res: Response) => {
     const result = await this.subscriptionService.rejectPayment(
       req.params.id as string,
@@ -50,14 +45,12 @@ export class SubscriptionController {
     res.status(200).send(result);
   };
 
-  // DEV: list all subscribers with payment history
   getSubscribers = async (req: Request, res: Response) => {
     const query = req.query as unknown as QueryPaginationDTO;
     const result = await this.subscriptionService.getSubscribers(query);
     res.status(200).send(result);
   };
 
-  // DEV: get subscriber stats for dashboard
   getSubscriberStats = async (req: Request, res: Response) => {
     const result = await this.subscriptionService.getSubscriberStats();
     res.status(200).send(result);

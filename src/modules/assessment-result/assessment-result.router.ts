@@ -19,20 +19,16 @@ export class AssessmentResultRouter {
   private initializedRoutes = () => {
     const auth = this.authMiddleware.verifyToken();
 
-    // GET /me
     this.router.get("/me", auth, this.assessmentResultController.getMyResults);
 
-    // GET /usage — check assessment usage for current subscription cycle
     this.router.get("/usage", auth, this.assessmentResultController.getUsage);
 
-    // POST /start/:assessmentId
     this.router.post(
       "/start/:assessmentId",
       auth,
       this.assessmentResultController.startAttempt,
     );
 
-    // POST /:id/submit
     this.router.post(
       "/:id/submit",
       auth,
@@ -40,7 +36,6 @@ export class AssessmentResultRouter {
       this.assessmentResultController.submitAnswers,
     );
 
-    // GET /:id
     this.router.get(
       "/:id",
       auth,
