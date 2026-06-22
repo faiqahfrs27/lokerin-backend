@@ -314,16 +314,32 @@ export class PreSelectionTestService {
       throw new ApiError("This test has no questions", 400);
     }
 
-    if (!test.allowRetake) {
-      const existingAttempt = await this.prisma.testAttempt.findFirst({
-        where: { userId, testId: test.id },
-      });
-      if (existingAttempt) {
-        throw new ApiError(
-          "This test does not allow retake. Your previous attempt is final.",
-          400,
-        );
+    let attempt = await this.prisma.testAttempt.findFirst({
+      where: { testId: test.id, userId, completedAt: null },
+      orderBy: { attemptedAt: "desc" },
+    });
+
+    if (!attempt) {
+      if (!test.allowRetake) {
+        const completed = await this.prisma.testAttempt.findFirst({
+          where: { testId: test.id, userId, completedAt: { not: null } },
+        });
+        if (completed) {
+          throw new ApiError(
+            "This test does not allow retake. Your previous attempt is final.",
+            400,
+          );
+        }
       }
+      attempt = await this.prisma.testAttempt.create({
+        data: {
+          testId: test.id,
+          userId,
+          score: 0,
+          passed: false,
+          answers: [] as unknown as Prisma.InputJsonValue,
+        },
+      });
     }
 
     const correctCount = this.gradeAttempt(test.questions, body.answers);
@@ -331,10 +347,9 @@ export class PreSelectionTestService {
     const score = Math.round((correctCount / totalQuestions) * 100);
     const passed = score >= test.passingScore;
 
-    const attempt = await this.prisma.testAttempt.create({
+    const updated = await this.prisma.testAttempt.update({
+      where: { id: attempt.id },
       data: {
-        testId,
-        userId,
         score,
         passed,
         answers: body.answers as unknown as Prisma.InputJsonValue,
@@ -343,12 +358,64 @@ export class PreSelectionTestService {
     });
 
     return {
-      attemptId: attempt.id,
+      attemptId: updated.id,
       score,
       passed,
       passingScore: test.passingScore,
       totalQuestions,
       correctAnswers: correctCount,
+    };
+  };
+
+  startAttempt = async (jobId: string, userId: string | undefined) => {
+    if (!userId) throw new ApiError("Not authenticated", 401);
+
+    const test = await this.prisma.preSelectionTest.findFirst({
+      where: { jobId, deletedAt: null },
+      select: { id: true, durationMinutes: true, allowRetake: true },
+    });
+    if (!test) throw new ApiError("Test not found", 404);
+
+    const inProgress = await this.prisma.testAttempt.findFirst({
+      where: { testId: test.id, userId, completedAt: null },
+      orderBy: { attemptedAt: "desc" },
+    });
+
+    if (inProgress) {
+      return {
+        attemptId: inProgress.id,
+        attemptedAt: inProgress.attemptedAt,
+        durationMinutes: test.durationMinutes,
+      };
+    }
+
+    if (!test.allowRetake) {
+      const completed = await this.prisma.testAttempt.findFirst({
+        where: { testId: test.id, userId, completedAt: { not: null } },
+      });
+      if (completed) {
+        throw new ApiError(
+          "This test does not allow retake. Your previous attempt is final.",
+          400,
+        );
+      }
+    }
+
+    const created = await this.prisma.testAttempt.create({
+      data: {
+        testId: test.id,
+        userId,
+        score: 0,
+        passed: false,
+        answers: [] as unknown as Prisma.InputJsonValue,
+        completedAt: null,
+      },
+    });
+
+    return {
+      attemptId: created.id,
+      attemptedAt: created.attemptedAt,
+      durationMinutes: test.durationMinutes,
     };
   };
 }
